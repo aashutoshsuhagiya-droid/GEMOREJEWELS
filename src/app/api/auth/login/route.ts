@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { adminSessionCookie, encodeSession } from "@/lib/admin-auth";
+
+export async function POST(request: Request) { const body = await request.json().catch(() => ({})) as { email?: string; password?: string; role?: "Admin" | "Staff" }; if (!body.email || body.password !== "demo123") return NextResponse.json({ error: "Use any email and the demo password demo123." }, { status: 401 }); const name = body.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, letter => letter.toUpperCase()); const response = NextResponse.json({ session: { email: body.email, name, role: body.role ?? "Admin" } }); response.cookies.set(adminSessionCookie, encodeSession({ email: body.email, name, role: body.role ?? "Admin" }), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 12 }); return response; }

@@ -1,0 +1,43 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { AdminProduct, Booking, Review } from "@/shared/admin-types";
+import { useAdminToast } from "./toast";
+
+async function read<T>(resource: string): Promise<T[]> {
+  const response = await fetch(`/api/admin/${resource}`, { credentials: "same-origin" });
+  if (!response.ok) throw new Error(`Unable to load ${resource}.`);
+  return response.json() as Promise<T[]>;
+}
+
+async function write<T>(resource: string, value: T) {
+  const response = await fetch(`/api/admin/${resource}`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ value }) });
+  if (!response.ok) throw new Error((await response.json() as { error?: string }).error || "Save failed.");
+  return response.json() as Promise<T>;
+}
+
+export function ConnectedBookingsScreen() {
+  const { notify } = useAdminToast();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"All" | Booking["status"]>("All");
+  const load = useCallback(async () => { try { setLoading(true); setBookings(await read<Booking>("bookings")); } catch (error) { notify(error instanceof Error ? error.message : "Bookings could not load.", "error"); } finally { setLoading(false); } }, [notify]);
+  useEffect(() => { void load(); }, [load]);
+  const visible = useMemo(() => bookings.filter(item => filter === "All" || item.status === filter).sort((a, b) => a.date.localeCompare(b.date)), [bookings, filter]);
+  async function update(item: Booking, status: Booking["status"]) { const next = { ...item, status }; try { await write("bookings", next); setBookings(current => current.map(value => value.id === item.id ? next : value)); notify(status === "Confirmed" ? `${item.name}'s appointment is confirmed.` : `${item.name}'s booking was updated.`); } catch (error) { notify(error instanceof Error ? error.message : "Booking could not be updated.", "error"); } }
+  return <main className="mx-auto max-w-[1280px] p-5 md:p-7"><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#737373]">GEMOIRE extras</p><h1 className="mt-1 font-serif text-3xl text-[#253e2b]">Showroom bookings</h1><p className="mt-1 text-sm text-[#737373]">Appointment requests placed on the storefront arrive here.</p><div className="mt-5 flex flex-wrap gap-2">{(["All", "New", "Confirmed", "No-show"] as const).map(value => <button key={value} onClick={() => setFilter(value)} className={`rounded-full px-3 py-2 text-xs ${filter === value ? "bg-[#236339] text-white" : "border border-[#d4d0cc] bg-white text-[#5f5a55]"}`}>{value} {value === "All" ? bookings.length : bookings.filter(item => item.status === value).length}</button>)}<button onClick={() => void load()} className="ml-auto rounded-full border border-[#d4d0cc] bg-white px-3 py-2 text-xs">Refresh</button></div><section className="mt-5 overflow-hidden rounded-md border border-[#e3e0dc] bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[700px] text-left text-sm"><thead className="bg-[#faf6ef] text-[10px] uppercase tracking-[.12em] text-[#737373]"><tr><th className="p-4">Client</th><th className="p-4">City</th><th className="p-4">Requested slot</th><th className="p-4">Status</th><th className="p-4"/></tr></thead><tbody>{loading ? Array.from({ length: 5 }, (_, index) => <tr key={index} className="border-t"><td colSpan={5} className="p-4"><div className="h-5 animate-pulse rounded bg-[#f4efe9]"/></td></tr>) : visible.map(item => <tr key={item.id} className="border-t border-[#eeeae5]"><td className="p-4"><strong className="block text-[#253e2b]">{item.name}</strong><small className="text-[#737373]">{item.email}</small></td><td className="p-4 text-sm">{item.city}</td><td className="p-4"><span className="block">{new Date(`${item.date}T00:00:00`).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span><small className="text-[#737373]">{item.preferredTime}</small></td><td className="p-4"><span className={`rounded-full px-2 py-1 text-[10px] ${item.status === "Confirmed" ? "bg-[#eaf5ee] text-[#236339]" : item.status === "No-show" ? "bg-red-50 text-red-700" : "bg-[#f8f1df] text-[#80631c]"}`}>{item.status}</span></td><td className="p-4 text-right">{item.status === "New" ? <button onClick={() => void update(item, "Confirmed")} className="rounded-full bg-[#236339] px-3 py-1.5 text-xs text-white">Confirm</button> : <button onClick={() => void update(item, item.status === "No-show" ? "Confirmed" : "No-show")} className="text-xs text-[#236339] underline">{item.status === "No-show" ? "Restore" : "Mark no-show"}</button>}</td></tr>)}</tbody></table></div>{!loading && !visible.length ? <p className="p-12 text-center text-sm text-[#737373]">No bookings match this view.</p> : null}</section></main>;
+}
+
+export function ConnectedReviewsScreen() {
+  const { notify } = useAdminToast();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [rating, setRating] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => { try { setLoading(true); const [nextReviews, nextProducts] = await Promise.all([read<Review>("reviews"), read<AdminProduct>("products")]); setReviews(nextReviews); setProducts(nextProducts); } catch (error) { notify(error instanceof Error ? error.message : "Reviews could not load.", "error"); } finally { setLoading(false); } }, [notify]);
+  useEffect(() => { void load(); }, [load]);
+  const names = useMemo(() => new Map(products.map(product => [product.id, product.name])), [products]);
+  const visible = reviews.filter(review => rating === "All" || String(review.rating) === rating);
+  async function save(review: Review) { try { await write("reviews", review); setReviews(current => current.map(item => item.id === review.id ? review : item)); notify(review.status === "hidden" ? "Review hidden from its product page." : "Review response saved to the product page."); } catch (error) { notify(error instanceof Error ? error.message : "Review could not be saved.", "error"); } }
+  return <main className="mx-auto max-w-[1120px] p-5 md:p-7"><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#737373]">Content</p><h1 className="mt-1 font-serif text-3xl text-[#253e2b]">Review responses</h1><div role="group" aria-label="Filter reviews by rating" className="mt-5 flex flex-wrap gap-2">{["All", "5", "4", "3", "2", "1"].map(value => <button type="button" key={value} aria-pressed={rating === value} onClick={() => setRating(value)} className={`rounded-full px-3 py-2 text-xs ${rating === value ? "bg-[#236339] text-white" : "border border-[#d4d0cc] bg-white"}`}>{value === "All" ? "All ratings" : `${value} stars`}</button>)}</div><div className="mt-5 grid gap-4">{loading ? Array.from({ length: 4 }, (_, index) => <div key={index} className="h-40 animate-pulse rounded-md border bg-[#f4efe9]"/>) : visible.map(review => <article className="rounded-md border border-[#e3e0dc] bg-white p-5" key={review.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[#c9a962]">{"★".repeat(review.rating)}</p><h2 className="mt-1 font-medium text-[#253e2b]">{review.customerName} <span className="font-normal text-[#737373]">· {review.city}</span></h2><p className="mt-2 text-sm italic text-[#5f5a55]">“{review.quote}”</p><p className="mt-2 text-[11px] uppercase tracking-[.1em] text-[#737373]">{names.get(review.productId) ?? "GEMOIRE piece"}</p></div><button onClick={() => void save({ ...review, status: review.status === "hidden" ? "published" : "hidden" })} className={`rounded-full px-3 py-2 text-xs ${review.status === "hidden" ? "border border-[#d4d0cc]" : "bg-red-50 text-red-700"}`}>{review.status === "hidden" ? "Restore" : "Hide"}</button></div><label className="mt-4 block text-xs font-medium text-[#5f5a55]">Store reply<textarea value={review.reply ?? ""} onChange={event => setReviews(current => current.map(item => item.id === review.id ? { ...item, reply: event.target.value } : item))} placeholder="Write a thoughtful response…" className="mt-2 min-h-20 w-full rounded-md border border-[#d4d0cc] p-3 text-sm"/></label><button onClick={() => void save(reviews.find(item => item.id === review.id) ?? review)} className="mt-3 rounded-full bg-[#236339] px-4 py-2 text-xs text-white">Save reply</button></article>)}{!loading && !visible.length ? <p className="rounded-md border border-dashed border-[#d4d0cc] p-12 text-center text-sm text-[#737373]">No reviews match this rating.</p> : null}</div></main>;
+}

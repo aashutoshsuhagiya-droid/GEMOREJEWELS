@@ -1,0 +1,517 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  /* Cullen Warm Luxury Palette */
+  --cullen-linen: #FDFBF7;
+  --cullen-oatmeal: #F7F5F0;
+  --cullen-white: #FFFFFF;
+  --cullen-charcoal: #1C1917;
+  --cullen-muted: #6B7280;
+  --cullen-forest: #1B382B;
+  --cullen-forest-hover: #13291F;
+  --cullen-gold: #C5A880;
+  --cullen-gold-light: #F7F3EB;
+  --cullen-border: #E7E3DA;
+  --cullen-border-dark: #D6D1C6;
+  --cullen-red: #D9383A;
+  /* Typography */
+  --display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --sans: var(--font-jost), "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  margin: 0;
+  background-color: var(--cullen-linen);
+  color: var(--cullen-charcoal);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+button, input, select, textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 1.5px solid var(--cullen-charcoal);
+  outline-offset: 2px;
+}
+/* Layout Shell & Section Rhythm */
+.shell {
+  max-width: 1320px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: 40px;
+  }
+}
+@media (min-width: 1280px) {
+  .shell {
+    padding-inline: 56px;
+  }
+}
+.section {
+  padding-block: 64px;
+}
+@media (min-width: 768px) {
+  .section {
+    padding-block: 96px;
+  }
+}
+.section-oatmeal {
+  background-color: var(--cullen-oatmeal);
+}
+.section-forest {
+  background-color: var(--cullen-forest);
+  color: var(--cullen-white);
+}
+/* Cullen Editorial Typography */
+h1, h2, h3, .font-serif {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+}
+h1 {
+  font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+}
+h2 {
+  font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+}
+h3 {
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+.eyebrow {
+  color: var(--cullen-gold);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+.lede {
+  color: var(--cullen-muted);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 580px;
+}
+/* Cullen Pill Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding-inline: 32px;
+  border-radius: 9999px;
+  background-color: var(--cullen-forest);
+  color: var(--cullen-white);
+  border: 1px solid var(--cullen-forest);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(27, 56, 43, 0.16);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.button:hover {
+  background-color: var(--cullen-forest-hover);
+  border-color: var(--cullen-forest-hover);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 22px rgba(27, 56, 43, 0.26);
+}
+.button:active {
+  transform: translateY(0) scale(0.98);
+}
+.button-outline {
+  background-color: transparent;
+  color: var(--cullen-charcoal);
+  border-color: var(--cullen-charcoal);
+  box-shadow: none;
+}
+.button-outline:hover {
+  background-color: var(--cullen-charcoal);
+  color: var(--cullen-white);
+  box-shadow: 0 6px 18px rgba(28, 25, 23, 0.12);
+}
+.button-white {
+  background-color: var(--cullen-white);
+  color: var(--cullen-charcoal);
+  border-color: var(--cullen-white);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.button-white:hover {
+  background-color: var(--cullen-linen);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+}
+.button-small {
+  height: 40px;
+  padding-inline: 20px;
+  font-size: 11px;
+}
+/* Announcement Header Bar */
+.announcement {
+  background-color: var(--cullen-forest);
+  color: var(--cullen-white);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 40px;
+  text-align: center;
+}
+.announcement a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+/* Header & Sticky Navigation */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: rgba(253, 251, 247, 0.95);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.site-header.scrolled {
+  border-bottom: 1px solid var(--cullen-border);
+  box-shadow: 0 4px 20px rgba(28, 25, 23, 0.04);
+}
+.header-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 84px;
+}
+.desktop-nav a, .nav-button {
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--cullen-charcoal);
+  padding: 12px 0;
+  position: relative;
+}
+.desktop-nav a::after, .nav-button::after {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--cullen-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.desktop-nav a:hover::after, .nav-button:hover::after {
+  transform: scaleX(1);
+}
+/* Logo Mark */
+.logo {
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+}
+.logo-main {
+  font-family: var(--display);
+  font-size: 32px;
+  letter-spacing: 0.18em;
+  font-weight: 400;
+  color: var(--cullen-forest);
+}
+.logo-sub {
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  color: var(--cullen-charcoal);
+  margin-top: 4px;
+}
+/* Cart Counter Badge */
+.cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: var(--cullen-forest);
+  color: var(--cullen-white);
+  font-size: 10px;
+  font-weight: 600;
+  padding-inline: 4px;
+}
+/* Mega Menu Dropdown */
+.mega {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--cullen-white);
+  border-top: 1px solid var(--cullen-border);
+  box-shadow: 0 20px 40px rgba(28, 25, 23, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mega.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+/* Cullen Diamond Shape Silhouette Selector Cards */
+.shape-grid {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-block: 8px;
+  scrollbar-width: none;
+}
+@media (min-width: 1024px) {
+  .shape-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    overflow: visible;
+  }
+}
+.shape-card {
+  flex: 0 0 100px;
+  background-color: var(--cullen-white);
+  border: 1px solid var(--cullen-border);
+  border-radius: 4px;
+  padding: 18px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.shape-card svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--cullen-charcoal);
+  stroke-width: 1.2;
+  transition: transform 0.3s ease;
+}
+.shape-card span {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cullen-charcoal);
+}
+.shape-card:hover {
+  border-color: var(--cullen-forest);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.08);
+}
+.shape-card:hover svg {
+  transform: scale(1.1);
+}
+/* Product Card & Smooth Image Crossfade */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.product-image {
+  aspect-ratio: 1;
+  background-color: var(--cullen-oatmeal);
+  overflow: hidden;
+  position: relative;
+  border-radius: 2px;
+}
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+.product-card:hover .product-image img {
+  transform: scale(1.04);
+}
+.product-image-hover {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+.product-card.has-hover:hover .product-image-primary {
+  opacity: 0;
+}
+.product-card.has-hover:hover .product-image-hover {
+  opacity: 1;
+}
+/* Cullen Metallic Swatches */
+.metal-swatches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.metal-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.2s ease;
+}
+.metal-swatch.active {
+  outline: 1.5px solid var(--cullen-charcoal);
+  outline-offset: 2px;
+}
+.metal-swatch:hover {
+  transform: scale(1.15);
+}
+.swatch-yellow { background-color: #E6CA65; }
+.swatch-rose { background-color: #E5A894; }
+.swatch-white { background-color: #E2E2E2; }
+.swatch-platinum { background-color: #CDD1D6; }
+/* Product Tags & Ratings */
+.product-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: var(--cullen-white);
+  color: var(--cullen-charcoal);
+  border: 1px solid var(--cullen-border);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  z-index: 2;
+}
+.wish-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--cullen-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+.wish-button:hover {
+  background-color: var(--cullen-white);
+  transform: scale(1.08);
+}
+.wish-button.saved {
+  color: var(--cullen-red);
+}
+/* Stars Rating */
+.stars {
+  color: var(--cullen-gold);
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+/* Accordions (Clean 1px Cullen Hairlines) */
+.faq-row, .detail-accordions details {
+  border-bottom: 1px solid var(--cullen-border);
+}
+summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 20px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 15px;
+  font-weight: 400;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+/* Slide-out Cart Drawer */
+.cart-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--cullen-white);
+  box-shadow: -10px 0 35px rgba(28, 25, 23, 0.12);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 28px;
+  transform: translateX(110%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 80;
+}
+.cart-drawer.open {
+  transform: translateX(0);
+}
+.shipping-progress {
+  background-color: var(--cullen-oatmeal);
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-block: 16px;
+}
+.progress-bar {
+  height: 4px;
+  background-color: var(--cullen-border);
+  border-radius: 9999px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background-color: var(--cullen-gold);
+  transition: width 0.4s ease;
+}
+/* Footer Styling */
+.footer {
+  background-color: var(--cullen-charcoal);
+  color: rgba(255, 255, 255, 0.65);
+  padding-top: 72px;
+}
+.footer h4 {
+  color: var(--cullen-white);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.footer-links a:hover {
+  color: var(--cullen-white);
+}
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 56px;
+  padding-block: 24px;
+  font-size: 11.5px;
+}

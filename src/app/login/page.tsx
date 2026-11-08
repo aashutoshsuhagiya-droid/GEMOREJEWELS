@@ -1,0 +1,9 @@
+"use client";
+import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+function safeAdminDestination(value: string | null) {
+  return value === "/admin" || value?.startsWith("/admin/") ? value : "/admin";
+}
+
+export default function LoginPage() { const router = useRouter(); const search = useSearchParams(); const [email, setEmail] = useState("admin@gemoirejewels.test"); const [password, setPassword] = useState("demo123"); const [role, setRole] = useState<"Admin" | "Staff">("Admin"); const [error, setError] = useState(""); const [saving, setSaving] = useState(false); async function signIn(event: FormEvent) { event.preventDefault(); setSaving(true); setError(""); const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, role }) }); setSaving(false); if (!response.ok) { setError((await response.json()).error); return; } router.replace(safeAdminDestination(search.get("next"))); router.refresh(); } return <main className="admin-login"><form className="admin-login-card" onSubmit={signIn}><div className="admin-wordmark"><span>GEMOIRE</span><small>JEWELS LLP</small></div><p className="eyebrow">Store administration</p><h1>Welcome back</h1><p className="admin-muted">Use any email address with <strong>demo123</strong> to enter the preview store.</p><label>Email<input type="email" required value={email} onChange={event => setEmail(event.target.value)}/></label><label>Password<input type="password" required value={password} onChange={event => setPassword(event.target.value)}/></label><label>Role<select value={role} onChange={event => setRole(event.target.value as "Admin" | "Staff")}><option>Admin</option><option>Staff</option></select></label>{error && <p className="admin-error">{error}</p>}<button className="button" disabled={saving}>{saving ? "Signing in…" : "Enter admin"}</button></form></main>; }
