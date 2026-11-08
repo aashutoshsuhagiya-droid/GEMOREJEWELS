@@ -15,9 +15,12 @@
   --cullen-border: #E7E3DA;
   --cullen-border-dark: #D6D1C6;
   --cullen-red: #D9383A;
-  /* Typography */
-  --display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-  --sans: var(--font-jost), "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Locally hosted editorial serif + modern grotesque, with metric-adjusted fallbacks. */
+  --display: var(--font-editorial), Georgia, serif;
+  --sans: var(--font-ui), Arial, sans-serif;
+  --heading-weight: 350;
+  /* Existing admin typography utilities share the same editorial font. */
+  --font-cormorant: var(--font-editorial);
 }
 * {
   box-sizing: border-box;
@@ -32,6 +35,8 @@ body {
   background-color: var(--cullen-linen);
   color: var(--cullen-charcoal);
   font-family: var(--sans);
+  font-weight: 400;
+  font-kerning: normal;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -84,8 +89,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* Cullen Editorial Typography */
 h1, h2, h3, .font-serif {
   font-family: var(--display);
-  font-weight: 400;
-  letter-spacing: -0.015em;
+  font-weight: var(--heading-weight);
+  letter-spacing: -0.025em;
   line-height: 1.12;
 }
 h1 {
@@ -128,7 +133,7 @@ h3 {
   border: 1px solid var(--cullen-forest);
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   box-shadow: 0 4px 14px rgba(27, 56, 43, 0.16);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -208,8 +213,8 @@ h3 {
   min-height: 84px;
 }
 .desktop-nav a, .nav-button {
-  font-size: 11.5px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   font-weight: 500;
   text-transform: uppercase;
   color: var(--cullen-charcoal);

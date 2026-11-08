@@ -27,8 +27,8 @@ export default {
         },
       },
       fontFamily: {
-        serif: ["var(--font-cormorant)", "Cormorant Garamond", "Didot", "Georgia", "serif"],
-        sans: ["var(--font-jost)", "Jost", "Inter", "system-ui", "sans-serif"],
+        serif: ["var(--font-editorial)", "Georgia", "serif"],
+        sans: ["var(--font-ui)", "Arial", "sans-serif"],
       },
       boxShadow: {
         'cullen-sm': '0 2px 8px rgba(28, 25, 23, 0.04)',

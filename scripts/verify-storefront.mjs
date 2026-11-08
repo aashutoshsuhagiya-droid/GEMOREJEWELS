@@ -17,7 +17,7 @@ const home = documentOnly(await (await get("/")).text());
 const catalog = await (await get("/api/catalog")).json();
 assert.ok(catalog.length > 0, "catalogue must contain active pieces");
 
-// Check what the production server actually ships, including the CSS cascade.
+// Check what localhost actually ships, including the CSS cascade and font files.
 const stylesheetPaths = [...home.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
   .map(([tag]) => decode(tag.match(/href="([^"]+)"/)[1]));
 assert.ok(stylesheetPaths.length > 0, "page must load its stylesheets");
@@ -49,8 +49,33 @@ assert.equal(declaration(".metal-swatch", "height"), "14px");
 assert.equal(declaration(".footer", "background-color"), "var(--cullen-charcoal)");
 assert.match(css, /prefers-reduced-motion:\s*reduce/);
 assert.match(css, /min-width:\s*1024px/);
-assert.match(css, /--font-cormorant/);
-assert.match(css, /--font-jost/);
+assert.match(declaration(":root", "--display"), /var\(--font-editorial\)/);
+assert.match(declaration(":root", "--sans"), /var\(--font-ui\)/);
+assert.equal(declaration(":root", "--heading-weight"), "350");
+assert.equal(declaration(".review-card", "font-family"), "var(--sans)");
+assert.equal(declaration(".review-card blockquote", "font-family"), "var(--sans)");
+assert.equal(declaration(".review-card cite", "font-family"), "var(--sans)");
+assert.doesNotMatch(css, /fonts\.googleapis\.com|fonts\.gstatic\.com|api\.fontshare\.com/);
+const fontFiles = new Set();
+sheet.walkAtRules("font-face", rule => {
+  rule.walkDecls("src", entry => {
+    for (const match of entry.value.matchAll(/url\(["']?([^"')]+\.woff2)["']?\)/g)) fontFiles.add(match[1]);
+  });
+});
+assert.equal(fontFiles.size, 2, "exactly two local variable fonts must ship");
+const { default: fontkitModule } = await import("next/dist/compiled/@next/font/dist/fontkit/index.js");
+const loadFont = fontkitModule.default?.default ?? fontkitModule.default ?? fontkitModule;
+const fontFamilies = [];
+for (const fontFile of fontFiles) {
+  const response = await get(fontFile);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  assert.equal(bytes.subarray(0, 4).toString(), "wOF2", "font URL must serve a WOFF2 binary");
+  const font = loadFont(bytes);
+  fontFamilies.push(font.familyName);
+  assert.ok(font.variationAxes.wght, "font must expose real variable weights");
+}
+assert.ok(fontFamilies.includes("Geist"));
+assert.ok(fontFamilies.some(name => name.startsWith("Cormorant Garamond")));
 
 const shapeLinks = [...home.matchAll(/<a\b[^>]*class="shape-card"[^>]*>[\s\S]*?<\/a>/g)].map(([tag]) => tag);
 assert.equal(shapeLinks.length, 9, "all nine diamond silhouettes must render");
