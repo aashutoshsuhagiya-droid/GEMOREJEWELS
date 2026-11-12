@@ -12,6 +12,19 @@ const read = (relativePath) => readFileSync(resolve(root, relativePath), "utf8")
 
 const repository = read("src/lib/admin-repository.ts");
 const types = read("src/shared/admin-types.ts");
+const storefrontCss = read("src/app/storefront.css");
+
+test("storefront responsive rules cover tablet, mobile, and narrow phones", () => {
+  assert.match(storefrontCss, /html, body \{ max-width: 100%; overflow-x: clip; \}/, "the page must prevent accidental horizontal overflow");
+  assert.match(storefrontCss, /@media \(max-width: 900px\)/, "tablet layouts need a dedicated collapse breakpoint");
+  assert.match(storefrontCss, /\.ready-grid, \.showroom-grid, \.newsletter-grid, \.showroom-page-grid \{ grid-template-columns: minmax\(0, 1fr\); \}/, "two-column marketing layouts must stack before phone widths");
+  assert.match(storefrontCss, /\.product-grid, \.skeletons \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/, "catalogues must use a stable two-column mobile grid");
+  assert.match(storefrontCss, /\.spec-quick \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/s, "product specifications must wrap without horizontal scrolling");
+  assert.match(storefrontCss, /@media \(max-width: 480px\)/, "small phones need compact controls and single-column footer rules");
+  assert.match(storefrontCss, /\.campaign-hero-copy \.button \{ width: 100%; \}/, "campaign actions must remain tappable on narrow screens");
+  assert.match(storefrontCss, /env\(safe-area-inset-bottom\)/, "fixed mobile surfaces must respect device safe areas");
+  assert.match(storefrontCss, /@media \(prefers-reduced-motion: reduce\)/, "responsive polish must preserve reduced-motion behavior");
+});
 
 test("SQLite keeps the existing persistent local path outside Vercel", () => {
   const workingDirectory = resolve("storage-fixture");

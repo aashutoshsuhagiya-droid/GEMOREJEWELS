@@ -4,6 +4,7 @@ textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
   outline: 1.5px solid var(--cullen-charcoal);
   outline-offset: 2px;
 }
+html, body { max-width: 100%; overflow-x: clip; }
 button:disabled { cursor: not-allowed; }
 .button:disabled { opacity: .55; transform: none; box-shadow: none; }
 .announcement { position: relative; }
@@ -316,6 +317,129 @@ img { display: block; max-width: 100%; }
   .campaign-hero-copy > div > p:not(.eyebrow) { font-size: 14px; }
   .campaign-hero-link { margin-left: 0; }
   .campaign-hero-benefits { gap: 8px 14px; }
+}
+@media (max-width: 900px) {
+  .ready-grid, .showroom-grid, .newsletter-grid, .showroom-page-grid { grid-template-columns: minmax(0, 1fr); }
+  .showroom-grid { gap: 36px; }
+  .showroom-photo img { height: clamp(240px, 48vw, 380px); }
+  .newsletter-grid { gap: 22px; }
+  .product-grid, .skeletons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .review-carousel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pdp-grid { display: block; padding-top: 30px; }
+  .pdp-gallery { position: static; }
+  .pdp-info { padding-top: 34px; }
+  .cart-page { grid-template-columns: minmax(0, 1fr); }
+  .cart-summary { width: 100%; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .campaign-hero-inner { grid-template-columns: minmax(220px, .75fr) minmax(390px, 1.25fr); }
+  .campaign-hero-copy { padding-block: 54px; }
+  .campaign-hero-copy h1 { font-size: clamp(48px, 7vw, 66px); }
+  .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plp-layout { gap: 26px; grid-template-columns: 190px minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .shell { padding-inline: 18px; }
+  .section { padding-block: 56px; }
+  .announcement { font-size: 10px; line-height: 1.4; min-height: 36px; padding: 7px 38px 7px 14px; }
+  .announcement a { display: inline; margin-left: 3px; }
+  .header-inner { min-height: 68px; }
+  .header-inner > .logo { max-width: min(48vw, 220px); }
+  .logo-main { font-size: clamp(22px, 7vw, 29px); letter-spacing: .12em; }
+  .logo-sub { font-size: 7px; letter-spacing: .28em; }
+  .header-actions { gap: 8px; }
+  .cart-trigger { white-space: nowrap; }
+  .mobile-menu { padding: 22px 20px max(24px, env(safe-area-inset-bottom)); }
+  .mobile-search { margin-top: 26px; }
+  .mobile-menu summary { font-size: clamp(23px, 7vw, 28px); }
+  .hero { min-height: clamp(570px, calc(100svh - 104px), 680px); }
+  .campaign-hero-image { object-position: 38% center; }
+  .campaign-hero-inner { min-height: clamp(570px, calc(100svh - 104px), 680px); }
+  .campaign-hero-copy { gap: 15px; padding: 190px 0 30px; }
+  .campaign-hero-copy h1 { font-size: clamp(38px, 11.5vw, 54px); line-height: 1; }
+  .campaign-hero-copy > div > p:not(.eyebrow) { font-size: 14px; line-height: 1.55; }
+  .campaign-hero-copy .hero-actions { align-items: flex-start; flex-direction: column; }
+  .campaign-hero-link { min-height: 44px; }
+  .campaign-hero-benefits { gap: 7px 12px; padding-top: 14px; }
+  .campaign-hero-benefits span { font-size: 9px; }
+  .section-heading { margin-bottom: 25px; }
+  .shape-grid { margin-inline: -18px; padding-inline: 18px; scroll-padding-inline: 18px; }
+  .shape-card { flex-basis: 92px; padding: 15px 8px; }
+  .quiz-card { padding: 26px 18px; }
+  .quiz-option { min-height: 44px; padding: 11px 15px; }
+  .ready-grid { gap: 30px; }
+  .postcard-stack { height: 230px; }
+  .postcard-stack img { height: 180px; }
+  .showroom-grid { gap: 28px; }
+  .city-pills { margin: 20px 0; }
+  .origins-steps { gap: 22px; margin-top: 30px; }
+  .rating-big { font-size: 60px; }
+  .review-carousel { grid-template-columns: minmax(0, 1fr); }
+  .review-card { min-height: 0; padding: 20px; }
+  .instagram-card { flex-basis: 78%; }
+  .email-row { flex-direction: column; }
+  .email-row .button { width: 100%; }
+  .page-top { padding: 38px 0; }
+  .breadcrumb { margin-bottom: 14px; }
+  .plp-top { gap: 14px; }
+  .sort-select { max-width: 100%; width: 100%; }
+  .collection-toolbar { align-items: stretch; flex-direction: column; }
+  .mobile-filters { justify-content: center; min-height: 44px; width: 100%; }
+  .filters.mobile-open { padding: 20px 18px max(20px, env(safe-area-inset-bottom)); top: 12%; }
+  .filter-actions { background: white; bottom: 0; margin-inline: -18px; padding: 14px 18px max(14px, env(safe-area-inset-bottom)); position: sticky; }
+  .product-grid, .skeletons { gap: 18px 10px; }
+  .product-info { padding-top: 9px; }
+  .product-info h3 { font-size: clamp(16px, 5vw, 19px); line-height: 1.18; }
+  .product-spec, .price-pair, .card-rating { font-size: 11px; }
+  .card-rating .stars { font-size: 10px; letter-spacing: 0; }
+  .product-tag { left: 8px; padding: 3px 6px; top: 8px; }
+  .wish-button { height: 32px; right: 8px; top: 8px; width: 32px; }
+  .pdp-grid { padding-top: 18px; }
+  .pdp-info { padding-bottom: 38px; padding-top: 24px; }
+  .pdp-info h1 { font-size: clamp(2rem, 10vw, 2.6rem); }
+  .thumbs { margin-inline: -18px; padding-inline: 18px; scroll-padding-inline: 18px; }
+  .spec-quick { gap: 14px 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px 0; }
+  .spec-quick span { min-width: 0; }
+  .variant-choice { min-height: 44px; }
+  .details-table { grid-template-columns: minmax(0, 1fr) auto; }
+  .craft-tracker { margin-inline: -4px; padding: 16px 12px; }
+  .tracker-step { font-size: 9px; }
+  .modal-backdrop { align-items: flex-end; padding: 12px; }
+  .modal { max-height: calc(100svh - 24px); overflow-y: auto; padding: 24px 20px max(24px, env(safe-area-inset-bottom)); }
+  .cart-page { gap: 28px; padding-block: 34px; }
+  .cart-summary { padding: 21px 18px; }
+  .checkout { margin: 34px auto; width: min(calc(100% - 36px), 760px); }
+  .checkout-steps { font-size: 11px; gap: 4px; }
+  .checkout-panel { padding: 20px 18px; }
+  .order-success { padding: 30px 20px; }
+  .showroom-page-grid { padding-block: 34px; }
+  .appointment-form { padding: 20px 18px; }
+  .not-found { min-height: 58vh; padding-block: 46px; }
+  .not-found form { align-items: stretch; flex-direction: column; }
+  .not-found button { min-height: 52px; }
+  .footer { padding-top: 54px; }
+  .footer-bottom { align-items: flex-start; flex-direction: column; margin-top: 38px; }
+}
+@media (max-width: 480px) {
+  .button { max-width: 100%; padding-inline: 22px; }
+  .campaign-hero-copy .button { width: 100%; }
+  .campaign-hero-link { justify-content: center; width: 100%; }
+  .campaign-hero-benefits { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .style-grid { gap: 10px; }
+  .style-card-text { bottom: 12px; left: 12px; }
+  .style-card-text h3 { font-size: 17px; }
+  .footer-grid { grid-template-columns: minmax(0, 1fr); }
+  .footer-grid > :first-child { grid-column: auto; }
+  .cart-drawer { padding: 18px 16px max(18px, env(safe-area-inset-bottom)); }
+  .drawer-actions { grid-template-columns: minmax(0, 1fr); }
+  .cart-line { grid-template-columns: 72px minmax(0, 1fr); }
+  .qty-row { flex-wrap: wrap; }
+  .checkout-steps span { padding-inline: 2px; }
+}
+@media (max-width: 359px) {
+  .product-grid, .skeletons { grid-template-columns: minmax(0, 1fr); }
+  .header-actions { gap: 4px; }
+  .cart-trigger { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; transition-delay: 0ms !important; }
