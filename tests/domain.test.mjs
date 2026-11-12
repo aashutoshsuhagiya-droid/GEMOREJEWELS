@@ -1,14 +1,80 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import Database from "better-sqlite3";
 import { diamondShapes, metalOptions, parseMetal, parseShape, productHref, productPrice } from "../src/lib/product-options.ts";
+import { sqliteDatabasePath } from "../src/lib/sqlite-storage.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (relativePath) => readFileSync(resolve(root, relativePath), "utf8");
 
 const repository = read("src/lib/admin-repository.ts");
 const types = read("src/shared/admin-types.ts");
+
+test("SQLite keeps the existing persistent local path outside Vercel", () => {
+  const workingDirectory = resolve("storage-fixture");
+  const expected = join(workingDirectory, "data", "gemoire-admin.db");
+  assert.equal(sqliteDatabasePath({}, workingDirectory), expected);
+  assert.equal(sqliteDatabasePath({ NODE_ENV: "production" }, workingDirectory), expected);
+  assert.equal(sqliteDatabasePath({ VERCEL: "0" }, workingDirectory), expected);
+});
+
+test("Vercel SQLite uses temporary storage instead of the read-only application", () => {
+  const workingDirectory = resolve("application-fixture");
+  const temporaryDirectory = resolve("temporary-fixture");
+  const expected = join(temporaryDirectory, "gemoire-jewels", "gemoire-admin.db");
+  assert.equal(sqliteDatabasePath({ VERCEL: "1" }, workingDirectory, temporaryDirectory), expected);
+  assert.equal(sqliteDatabasePath({ VERCEL: "1", GEMOIRE_DATA_DIR: "  " }, workingDirectory, temporaryDirectory), expected);
+  assert.match(repository, /const filename = sqliteDatabasePath\(\)/);
+  assert.match(repository, /new Database\(filename\)/);
+  assert.doesNotMatch(repository, /path\.join\(process\.cwd\(\), "data"\)/);
+});
+
+test("SQLite supports an explicit persistent data directory", () => {
+  const workingDirectory = resolve("application-fixture");
+  const persistentDirectory = resolve("persistent-fixture");
+  assert.equal(
+    sqliteDatabasePath({ GEMOIRE_DATA_DIR: `  ${persistentDirectory}  ` }, workingDirectory),
+    join(persistentDirectory, "gemoire-admin.db")
+  );
+  assert.equal(
+    sqliteDatabasePath({ GEMOIRE_DATA_DIR: "custom-data" }, workingDirectory),
+    join(workingDirectory, "custom-data", "gemoire-admin.db")
+  );
+});
+
+for (const vercel of [false, true]) {
+  test(`SQLite ${vercel ? "Vercel" : "local"} storage preserves committed rows and transaction rollback`, () => {
+    const fixture = mkdtempSync(join(tmpdir(), "gemoire-sqlite-test-"));
+    let database;
+    try {
+      const workingDirectory = join(fixture, "application");
+      const temporaryDirectory = join(fixture, "temporary");
+      mkdirSync(workingDirectory, { recursive: true });
+      if (vercel) writeFileSync(join(workingDirectory, "data"), "Application data directory must not be written.");
+      const filename = sqliteDatabasePath(vercel ? { VERCEL: "1" } : {}, workingDirectory, temporaryDirectory);
+      mkdirSync(dirname(filename), { recursive: true });
+      database = new Database(filename);
+      database.pragma("journal_mode = WAL");
+      database.exec("CREATE TABLE records (id TEXT PRIMARY KEY, value TEXT NOT NULL)");
+      const insert = database.prepare("INSERT INTO records (id, value) VALUES (?, ?)");
+      database.transaction(() => insert.run("saved", "Persisted value"))();
+      assert.throws(database.transaction(() => {
+        insert.run("rolled-back", "Must not persist");
+        throw new Error("Abort transaction");
+      }), /Abort transaction/);
+      database.close();
+      database = new Database(filename);
+      assert.deepEqual(database.prepare("SELECT id, value FROM records").all(), [{ id: "saved", value: "Persisted value" }]);
+      if (vercel) assert.equal(readFileSync(join(workingDirectory, "data"), "utf8"), "Application data directory must not be written.");
+    } finally {
+      database?.close();
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+}
 
 test("metal selections survive card-to-product navigation and reject unknown query values", () => {
   for (const { name } of metalOptions) {

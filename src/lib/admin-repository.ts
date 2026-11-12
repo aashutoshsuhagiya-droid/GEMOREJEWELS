@@ -9,6 +9,7 @@ import type {
   StoreSettings, Subscriber, BlogPost
 } from "@/shared/admin-types";
 import { siteUrl } from "@/shared/site-config";
+import { sqliteDatabasePath } from "@/lib/sqlite-storage";
 
 type Sqlite = Database.Database;
 declare global { var __gemoireDb: Sqlite | undefined; }
@@ -70,9 +71,9 @@ function makeInvoices(orders: Order[]): Invoice[] { return orders.filter(order =
 
 function database(): Sqlite {
   if (global.__gemoireDb) return global.__gemoireDb;
-  const directory = path.join(process.cwd(), "data");
-  fs.mkdirSync(directory, { recursive: true });
-  const db = new Database(path.join(directory, "gemoire-admin.db"));
+  const filename = sqliteDatabasePath();
+  fs.mkdirSync(path.dirname(filename), { recursive: true });
+  const db = new Database(filename);
   db.pragma("journal_mode = WAL");
   db.exec("CREATE TABLE IF NOT EXISTS entity_store (kind TEXT NOT NULL, id TEXT NOT NULL, json TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(kind, id)); CREATE TABLE IF NOT EXISTS meta_store (key TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);");
   global.__gemoireDb = db;
