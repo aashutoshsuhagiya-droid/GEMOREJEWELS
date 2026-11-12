@@ -77,15 +77,20 @@ img { display: block; max-width: 100%; }
 .mobile-menu details a { color: rgba(255,255,255,.72); display: block; padding-top: 12px; }
 .region-select { bottom: 30px; color: rgba(255,255,255,.7); position: absolute; }
 
-.hero { background: var(--cullen-linen); min-height: min(80vh, 760px); overflow: hidden; }
-.hero-inner { align-items: center; display: grid; gap: 30px; grid-template-columns: .9fr 1.1fr; min-height: min(80vh, 760px); }
-.hero-copy { display: grid; gap: 22px; padding: 40px 0; z-index: 1; }
-.hero-copy p { margin-bottom: 0; }
+.hero { background: var(--cullen-charcoal); min-height: min(76vh, 720px); overflow: hidden; position: relative; }
+.campaign-hero-image { height: 100%; inset: 0; object-fit: cover; object-position: center; position: absolute; width: 100%; }
+.campaign-hero-shade { background: linear-gradient(90deg, rgba(16,14,13,.08) 0%, rgba(16,14,13,.24) 42%, rgba(16,14,13,.88) 100%); inset: 0; position: absolute; }
+.campaign-hero-inner { align-items: center; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr); min-height: min(76vh, 720px); position: relative; z-index: 1; }
+.campaign-hero-copy { color: white; display: grid; gap: 22px; grid-column: 2; max-width: 570px; padding: 64px 0; }
+.campaign-hero-copy h1 { color: white; font-size: clamp(46px, 5vw, 76px); line-height: .98; }
+.campaign-hero-copy > div > p:not(.eyebrow) { color: rgba(255,255,255,.78); font-size: 16px; line-height: 1.65; max-width: 520px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.deadline { align-items: center; color: var(--cullen-muted); display: flex; font-size: 12px; gap: 7px; }
-.hero-visual { height: min(70vh, 650px); position: relative; }
-.hero-visual img { border-radius: 6px 0 0 6px; height: 100%; object-fit: cover; object-position: center; width: 116%; }
-.placeholder-note { background: rgba(255,255,255,.9); bottom: 12px; color: var(--cullen-muted); font-size: 10px; left: 12px; letter-spacing: .05em; padding: 5px 7px; position: absolute; text-transform: uppercase; }
+.campaign-hero-link { align-items: center; border-bottom: 1px solid rgba(255,255,255,.55); color: white; display: inline-flex; font-size: 12px; gap: 10px; letter-spacing: .09em; margin-left: 10px; text-transform: uppercase; }
+.campaign-hero-link span { font-size: 18px; transition: transform .25s ease; }
+.campaign-hero-link:hover span { transform: translateX(4px); }
+.campaign-hero-benefits { border-top: 1px solid rgba(255,255,255,.24); display: flex; flex-wrap: wrap; gap: 10px 22px; padding-top: 18px; }
+.campaign-hero-benefits span { color: rgba(255,255,255,.76); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.campaign-hero-benefits span::before { color: var(--cullen-gold); content: '◇'; margin-right: 7px; }
 .style-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); }
 .style-card { aspect-ratio: 1; overflow: hidden; position: relative; }
 .style-card img { height: 100%; object-fit: cover; transition: transform .4s ease, opacity .4s ease; width: 100%; }
@@ -300,6 +305,17 @@ img { display: block; max-width: 100%; }
   .form-grid { grid-template-columns: minmax(0, 1fr); }
   .form-grid input:first-child { grid-column: auto; }
   .account-order { align-items: start; flex-direction: column; gap: 16px; }
+}
+@media (max-width: 767px) {
+  .hero { min-height: 620px; }
+  .campaign-hero-image { object-position: 40% center; }
+  .campaign-hero-shade { background: linear-gradient(0deg, rgba(16,14,13,.94) 0%, rgba(16,14,13,.48) 62%, rgba(16,14,13,.08) 100%); }
+  .campaign-hero-inner { align-items: end; display: flex; min-height: 620px; }
+  .campaign-hero-copy { gap: 16px; max-width: 100%; padding: 220px 0 40px; }
+  .campaign-hero-copy h1 { font-size: clamp(42px, 12vw, 58px); }
+  .campaign-hero-copy > div > p:not(.eyebrow) { font-size: 14px; }
+  .campaign-hero-link { margin-left: 0; }
+  .campaign-hero-benefits { gap: 8px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; transition-delay: 0ms !important; }
