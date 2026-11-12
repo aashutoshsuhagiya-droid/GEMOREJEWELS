@@ -1,5 +1,8 @@
 import "server-only";
 
+import Database from "better-sqlite3";
+import fs from "node:fs";
+import path from "node:path";
 import type {
   AdminProduct, Booking, Collection, CraftStage, CreditNote, Customer, Discount, EntityMap, EntityName, Faq, InstagramItem,
   Invoice, InvoiceBillingSnapshot, Order, OrderStatus, PaymentStatus, QuizOutcome, QuizQuestion, RedirectRule, Review, SeoAnalytics, SeoPage, SeoSite,
@@ -7,95 +10,8 @@ import type {
 } from "@/shared/admin-types";
 import { siteUrl } from "@/shared/site-config";
 
-/**
- * In-memory data store. Vercel's filesystem is read-only — every fs.mkdirSync
- * throws ENOENT (the "/var/task/data" errors in the production logs), so the
- * file-based SQLite repository is replaced with a worker-global JSON store
- * that exposes the same prepared-statement surface. All repository call sites
- * in this file keep working unchanged.
- *
- * Caveat: each Vercel worker instance seeds its own demo copy on first use
- * and writes do not survive worker recycling. Swap this module for a real
- * database (KV / Postgres) when shared persistence is required.
- */
-type Row = { json: string };
-type TimedRow = Row & { updatedAt: string };
-type Prepared = { get: (...args: unknown[]) => Row | undefined; all: (...args: unknown[]) => Row[]; run: (...args: unknown[]) => unknown };
-type Sqlite = {
-  pragma: (...args: string[]) => void;
-  exec: (sql: string) => void;
-  prepare: (sql: string) => Prepared;
-  transaction: <T>(fn: () => T) => () => T;
-};
-type DataShape = { entities: Map<string, Map<string, TimedRow>>; meta: Map<string, TimedRow> };
-
-declare global {
-  var __gemoireDb: Sqlite | undefined;
-  var __gemoireData: DataShape | undefined;
-}
-
-function gemoireData(): DataShape {
-  globalThis.__gemoireData ??= { entities: new Map(), meta: new Map() };
-  return globalThis.__gemoireData;
-}
-function kindRows(kind: string): Map<string, TimedRow> {
-  const store = gemoireData();
-  store.entities.set(kind, store.entities.get(kind) ?? new Map());
-  return store.entities.get(kind)!;
-}
-function prepare(sql: string): Prepared {
-  const upper = sql.replace(/\s+/g, " ").trim().toUpperCase();
-  return {
-    get(...args: unknown[]) {
-      if (upper.startsWith("SELECT JSON FROM META_STORE")) {
-        const key = args[0] != null ? String(args[0]) : /KEY='([^']+)'/i.exec(sql)?.[1];
-        const row = key ? gemoireData().meta.get(key) : undefined;
-        return row ? { json: row.json } : undefined;
-      }
-      if (upper.startsWith("SELECT JSON FROM ENTITY_STORE")) return kindRows(String(args[0])).get(String(args[1]));
-      return undefined;
-    },
-    all(...args: unknown[]) {
-      if (upper.startsWith("SELECT JSON FROM ENTITY_STORE")) {
-        return [...kindRows(String(args[0])).values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-      }
-      return [];
-    },
-    run(...args: unknown[]) {
-      if (upper.startsWith("INSERT INTO ENTITY_STORE")) {
-        const { kind, id, json, updatedAt } = args[0] as TimedRow & { kind: string; id: string };
-        kindRows(kind).set(id, { json, updatedAt });
-        return {};
-      }
-      if (upper.startsWith("INSERT INTO META_STORE")) {
-        const { key, json, updatedAt } = args[0] as TimedRow & { key: string };
-        gemoireData().meta.set(key, { json, updatedAt });
-        return {};
-      }
-      if (upper.includes("KIND='SEOPAGES'")) {
-        kindRows("seoPages").delete(String(args[0]));
-        return {};
-      }
-      if (upper.includes("KIND='REVIEWS'")) {
-        const reviews = kindRows("reviews");
-        for (const [id, row] of reviews) if (JSON.parse(row.json).productId === args[0]) reviews.delete(id);
-        return {};
-      }
-      if (upper.startsWith("DELETE FROM ENTITY_STORE")) {
-        kindRows(String(args[0])).delete(String(args[1]));
-        return {};
-      }
-      return {};
-    }
-  };
-}
-function exec(sql: string) {
-  if (sql.replace(/\s+/g, " ").trim().toUpperCase().includes("DELETE FROM ENTITY_STORE")) {
-    const store = gemoireData();
-    store.entities.clear();
-    store.meta.clear();
-  }
-}
+type Sqlite = Database.Database;
+declare global { var __gemoireDb: Sqlite | undefined; }
 
 const imagePool = [
   "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=85",
@@ -153,17 +69,13 @@ function makeOrders(products: AdminProduct[], customers: Customer[]): Order[] { 
 function makeInvoices(orders: Order[]): Invoice[] { return orders.filter(order => order.paymentStatus === "Paid" || order.paymentStatus === "Refunded").map((order, index) => ({ id: `invoice-${String(index + 1).padStart(3, "0")}`, number: `${settingsSeed.billing.prefix}2026-${String(index + 1).padStart(4, "0")}`, orderId: order.id, customerId: order.customerId, issuedAt: order.createdAt, dueAt: order.createdAt, lines: order.items.map(item => ({ desc: `GEMOIREJEWELSLLP fine jewellery · ${item.variant}`, hsn: item.hsnCode, qty: item.qty, rate: Math.round(item.lineTotal / item.qty), amount: item.lineTotal })), subtotal: order.subtotal, cgst: Math.round(order.gstAmount / 2), sgst: Math.round(order.gstAmount / 2), shipping: order.shipping, totalAud: order.totalAud, totalUsd: order.totalUsd, status: order.paymentStatus === "Refunded" ? "refunded" : "paid", stampDate: order.createdAt, method: order.paymentMethod, billingSnapshot: invoiceBillingSnapshot(settingsSeed) })); }
 
 function database(): Sqlite {
-  if (globalThis.__gemoireDb) return globalThis.__gemoireDb;
-  const db: Sqlite = {
-    pragma() {},
-    exec,
-    prepare,
-    transaction: fn => {
-      const run = () => fn();
-      return run;
-    }
-  };
-  globalThis.__gemoireDb = db;
+  if (global.__gemoireDb) return global.__gemoireDb;
+  const directory = path.join(process.cwd(), "data");
+  fs.mkdirSync(directory, { recursive: true });
+  const db = new Database(path.join(directory, "gemoire-admin.db"));
+  db.pragma("journal_mode = WAL");
+  db.exec("CREATE TABLE IF NOT EXISTS entity_store (kind TEXT NOT NULL, id TEXT NOT NULL, json TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(kind, id)); CREATE TABLE IF NOT EXISTS meta_store (key TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);");
+  global.__gemoireDb = db;
   seed(db);
   synchronizeAllProductReviewSummaries();
   return db;
