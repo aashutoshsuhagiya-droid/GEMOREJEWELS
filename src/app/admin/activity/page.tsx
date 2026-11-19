@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Discount, Review, Subscriber } from "@/shared/admin-types";
 import { PageHeading } from "@/components/admin/orders";
-import { formatAdminAud, useAdminOperations } from "@/components/admin/shell";
+import { formatAdminUsd, useAdminOperations } from "@/components/admin/shell";
 
 type SecondaryActivity = { reviews: Review[]; subscribers: Subscriber[]; discounts: Discount[] };
 
@@ -18,7 +18,7 @@ export default function AdminActivityPage() {
     return () => { active = false; };
   }, []);
   const activity = useMemo(() => {
-    const orderItems = orders.map(order => ({ key: order.id, icon: "◎", tone: "bg-[#edf7ef] text-[#236339]", body: <>New order <strong className="font-mono">{order.code}</strong> · <strong>{formatAdminAud(order.totalAud)}</strong></>, at: order.createdAt, href: "/admin/orders" }));
+    const orderItems = orders.map(order => ({ key: order.id, icon: "◎", tone: "bg-[#edf7ef] text-[#236339]", body: <>New order <strong className="font-mono">{order.code}</strong> · <strong>{formatAdminUsd(order.totalUsd)}</strong></>, at: order.createdAt, href: "/admin/orders" }));
     const reviewItems = (secondary?.reviews ?? []).map(review => ({ key: review.id, icon: "★", tone: "bg-[#f8f1df] text-[#80631c]", body: <>{review.rating}-star review from <strong>{review.customerName}</strong>{review.reply ? " · store reply sent" : " · reply needed"}</>, at: review.createdAt, href: "/admin/reviews" }));
     const subscriberItems = (secondary?.subscribers ?? []).map(subscriber => ({ key: subscriber.id, icon: "✦", tone: "bg-[#edf7ef] text-[#236339]", body: <>Newsletter subscriber <strong>{subscriber.email}</strong>{subscriber.unsubscribed ? " unsubscribed" : " joined"}</>, at: subscriber.addedAt, href: "/admin/newsletter" }));
     return [...orderItems, ...reviewItems, ...subscriberItems].sort((left, right) => right.at.localeCompare(left.at));

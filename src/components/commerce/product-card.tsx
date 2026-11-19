@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { Metal, Product } from "@/data/products";
-import { formatAud, formatUsd } from "@/data/products";
+import { useCurrency } from "./currency-store";
 import { productHref, productPrice } from "@/lib/product-options";
 import { MetalSwatches } from "./metal-swatches";
 
 const needsUnoptimizedImage = (src: string) => src.startsWith("data:") || src.startsWith("blob:") || !src.startsWith("https://images.unsplash.com/");
 
 export function ProductCard({ product }: { product: Product }) {
+  const { formatMoney } = useCurrency();
   const [saved, setSaved] = useState(false);
   const [metal, setMetal] = useState<Metal>(product.metal);
   const price = productPrice(product, metal, product.carat);
@@ -30,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
     <div className="product-info">
       <h3><Link href={href}>{product.name}</Link></h3>
       <p className="product-spec" aria-live="polite">{product.carat} {product.setting}, {metal}</p>
-      <div className="price-pair"><span>{formatAud(price)}</span><span>{formatUsd(Math.round(price * .65))}</span></div>
+      <div className="price-pair"><span>{formatMoney(price)}</span></div>
       <MetalSwatches value={metal} onChange={setMetal} label={`Choose metal for ${product.name}`}/>
       <span className="card-rating"><span className="stars" aria-hidden="true">★★★★★</span> <span className="text-cullen-muted">{product.rating} ({product.reviewCount})</span></span>
     </div>

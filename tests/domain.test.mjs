@@ -6,6 +6,8 @@ import { dirname, join, resolve } from "node:path";
 import Database from "better-sqlite3";
 import { diamondShapes, metalOptions, parseMetal, parseShape, productHref, productPrice } from "../src/lib/product-options.ts";
 import { sqliteDatabasePath } from "../src/lib/sqlite-storage.ts";
+import { DEFAULT_CURRENCY, STATIC_USD_RATES, STATIC_RATES_UPDATED_AT, currencyAmount, currencyOptions, currencySymbol, formatCurrencyAmount, isCurrencyCode } from "../src/lib/currency.ts";
+import { inferJewelryType, isJewelryType, migrateProductJewelryTypes } from "../src/lib/jewelry-type.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (relativePath) => readFileSync(resolve(root, relativePath), "utf8");
@@ -13,6 +15,208 @@ const read = (relativePath) => readFileSync(resolve(root, relativePath), "utf8")
 const repository = read("src/lib/admin-repository.ts");
 const types = read("src/shared/admin-types.ts");
 const storefrontCss = read("src/app/storefront.css");
+const header = read("src/components/layout/header.tsx");
+const currencyStore = read("src/components/commerce/currency-store.tsx");
+const currencySelector = read("src/components/layout/currency-selector.tsx");
+const fxRateStore = read("src/lib/fx-rate-store.ts");
+
+test("jewelry types follow the legacy name rules and accept only the five saved values", () => {
+  for (const [name, type] of [
+    ["Mira Diamond Hoops", "earring"], ["Mira Golden Hoop", "earring"], ["Mira Diamond Drop", "earring"],
+    ["Mira Pendant Light", "necklace"], ["Mira Open Band", "bracelet"], ["Diamond Cuff", "bracelet"],
+    ["Gold Bangle", "bracelet"], ["Aaria Classic Solitaire", "ring"], ["Mira Diamond Band", "ring"],
+  ]) {
+    assert.equal(inferJewelryType(name), type);
+    assert.equal(inferJewelryType(name.toLowerCase()), type);
+  }
+  for (const type of ["ring", "earring", "bracelet", "necklace", "loose-stone"]) assert.equal(isJewelryType(type), true);
+  for (const type of [undefined, null, "earrings", "Ring", "invalid"]) assert.equal(isJewelryType(type), false);
+});
+
+test("jewelry type backfill preserves saved types, pricing, timestamps and existing migration markers across restarts", () => {
+  const fixture = mkdtempSync(join(tmpdir(), "gemoire-jewelry-type-test-"));
+  const filename = join(fixture, "migration.db");
+  let db = new Database(filename);
+  try {
+    db.exec("CREATE TABLE entity_store (kind TEXT, id TEXT, json TEXT, updated_at TEXT, PRIMARY KEY(kind,id)); CREATE TABLE meta_store (key TEXT PRIMARY KEY, json TEXT, updated_at TEXT);");
+    db.prepare("INSERT INTO meta_store VALUES (?, ?, ?)").run("currency-base-usd-v1", "{}", "2026-01-01");
+    const originals = [
+      { id: "legacy", name: "Mira Golden Hoop", priceUsd: 1250, priceAud: 1900, stock: 4, baseCurrency: "USD" },
+      { id: "admin-choice", name: "Mira Golden Hoop", jewelryType: "necklace", priceUsd: 1400, status: "draft" },
+      { id: "explicit-ring", name: "Mira Open Band", jewelryType: "ring", priceUsd: 1900 },
+    ];
+    for (const value of originals) db.prepare("INSERT INTO entity_store VALUES (?, ?, ?, ?)").run("products", value.id, JSON.stringify(value), "2026-02-01");
+    db.prepare("INSERT INTO entity_store VALUES (?, ?, ?, ?)").run("orders", "untouched", '{"name":"Pendant"}', "2026-03-01");
+    migrateProductJewelryTypes(db);
+    const row = id => db.prepare("SELECT * FROM entity_store WHERE kind='products' AND id=?").get(id);
+    assert.deepEqual(JSON.parse(row("legacy").json), { ...originals[0], jewelryType: "earring" });
+    for (const original of originals.slice(1)) assert.equal(row(original.id).json, JSON.stringify(original));
+    for (const original of originals) assert.equal(row(original.id).updated_at, "2026-02-01");
+    assert.equal(db.prepare("SELECT json FROM entity_store WHERE kind='orders'").get().json, '{"name":"Pendant"}');
+    assert.equal(db.prepare("SELECT updated_at FROM meta_store WHERE key='currency-base-usd-v1'").get().updated_at, "2026-01-01");
+    db.prepare("UPDATE entity_store SET json=? WHERE id='legacy'").run(JSON.stringify({ ...originals[0], name: "Pendant renamed", jewelryType: "loose-stone" }));
+    db.close();
+    db = new Database(filename);
+    migrateProductJewelryTypes(db);
+    assert.equal(JSON.parse(row("legacy").json).jewelryType, "loose-stone");
+    assert.equal(db.prepare("SELECT total_changes() AS count").get().count, 0, "completed migration must perform no writes");
+  } finally {
+    db.close();
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("jewelry type backfill rolls back all changes if a legacy record cannot be read", () => {
+  const db = new Database(":memory:");
+  try {
+    db.exec("CREATE TABLE entity_store (kind TEXT, id TEXT, json TEXT, updated_at TEXT, PRIMARY KEY(kind,id)); CREATE TABLE meta_store (key TEXT PRIMARY KEY, json TEXT, updated_at TEXT);");
+    const original = '{"name":"Golden Hoop"}';
+    db.prepare("INSERT INTO entity_store VALUES ('products', ?, ?, 'unchanged')").run("a", original);
+    db.prepare("INSERT INTO entity_store VALUES ('products', ?, ?, 'unchanged')").run("z", "invalid JSON");
+    assert.throws(() => migrateProductJewelryTypes(db));
+    assert.equal(db.prepare("SELECT json FROM entity_store WHERE id='a'").get().json, original);
+    assert.equal(db.prepare("SELECT count(*) AS count FROM meta_store").get().count, 0);
+  } finally {
+    db.close();
+  }
+});
+
+test("currency registry covers and formats all 92 requested currencies from USD rates", () => {
+  const expectedCodes = "AED AFN AMD ANG AUD AWG AZN BBD BDT BIF BND BOB BSD BWP BZD CAD CDF CNY CRC CVE DJF DKK DOP DZD EGP ETB EUR FJD FKP GBP GMD GNF GTQ GYD HKD HNL IDR ILS JMD JPY KES KGS KHR KMF KRW KYD KZT LAK LBP LKR MAD MMK MNT MOP MUR MVR MWK MYR NGN NIO NPR NZD PEN PGK PHP PKR PYG QAR RWF SBD SGD SHP SLL STD THB TJS TOP TTD TWD TZS UGX USD UYU UZS VND VUV WST XAF XCD XOF XPF YER".split(" ");
+  assert.equal(currencyOptions.length, 92);
+  assert.equal(new Set(currencyOptions.map(option => option.code)).size, 92);
+  assert.deepEqual(currencyOptions.map(option => option.code), expectedCodes);
+  assert.deepEqual(Object.keys(STATIC_USD_RATES).sort(), [...expectedCodes].sort());
+  assert.equal(DEFAULT_CURRENCY, "USD");
+  assert.equal(STATIC_USD_RATES.USD, 1);
+  for (const code of expectedCodes) assert.ok(STATIC_USD_RATES[code] > 0, `${code} needs a positive fallback rate`);
+
+  const sampleRates = { ...STATIC_USD_RATES, USD: 1, AUD: 1.55, JPY: 155.25 };
+  assert.equal(currencyAmount(100, "USD", sampleRates), 100);
+  assert.equal(currencyAmount(100, "AUD", sampleRates), 155);
+  assert.equal(currencyAmount(100, "JPY", sampleRates), 15525);
+  for (const code of ["AUD", "USD", "JPY", "CNY", "AED", "EUR", "GBP", "BDT", "XOF", "VND"]) {
+    const option = currencyOptions.find(item => item.code === code);
+    assert.ok(option);
+    const converted = currencyAmount(1234, code, sampleRates);
+    assert.equal(formatCurrencyAmount(1234, code, sampleRates), new Intl.NumberFormat(option.locale, { style: "currency", currency: code }).format(converted));
+    assert.ok(currencySymbol(code).length > 0);
+  }
+  assert.equal(isCurrencyCode("EUR"), true);
+  assert.equal(isCurrencyCode("CHF"), false);
+});
+
+test("currency choice is searchable, persistent, responsive, and next to the call link", () => {
+  assert.match(header, /<HeaderPhone\/><CurrencySelector\/>/, "desktop currency control must sit beside the phone link");
+  assert.match(header, /<CurrencySelector mobile\/>/, "mobile navigation must retain currency selection");
+  assert.match(currencySelector, /placeholder="Search"/);
+  assert.match(currencySelector, /role="listbox"/);
+  assert.match(currencySelector, /event\.key !== "Escape"/);
+  assert.match(currencySelector, /event\.key === "ArrowDown"/);
+  assert.match(currencySelector, /event\.key === "Home"/);
+  assert.match(currencySelector, /currencySymbol/, "search must include symbols resolved by Intl");
+  assert.match(currencyStore, /gemoire_currency/, "the selection must persist between visits");
+  assert.match(currencyStore, /fetch\("\/api\/currency\/rates"\)/, "rates must load once through the shared store");
+  assert.match(currencyStore, /sessionRatesRequest \?\?=/, "client requests must be cached for the session");
+  assert.match(currencyStore, /formatCurrencyAmount/, "all consumers must share one formatter");
+  assert.match(storefrontCss, /\.currency-popover \{[^}]*position: absolute/s, "desktop selector must use an anchored popover");
+  assert.match(storefrontCss, /\.mobile-menu \.currency-popover \{[^}]*bottom: calc\(100% \+ 9px\)[^}]*position: absolute/s, "mobile selector must overlay without shifting the menu");
+});
+
+test("FX route provides live caching and a never-empty SQLite/static fallback chain", () => {
+  const route = read("src/app/api/currency/rates/route.ts");
+  assert.match(route, /FX_RATES_API_KEY/);
+  assert.match(route, /openexchangerates\.org\/api\/latest\.json/);
+  assert.match(route, /15 \* 60 \* 1000/, "upstream cache must not exceed 15 minutes");
+  assert.match(route, /return \[code, Number\.isFinite\(providerRate\)/, "provider USD-base rates must be used directly");
+  assert.match(route, /persistFxRates\(derived, updatedAt\)/);
+  assert.match(route, /readPersistedFxRates\(\)/);
+  assert.match(route, /STATIC_USD_RATES/);
+  assert.match(route, /base: "USD"/);
+  assert.match(route, /source: "fallback"/);
+});
+
+test("FX snapshots persist in the existing SQLite database contract", () => {
+  const fixture = mkdtempSync(join(tmpdir(), "gemoire-fx-test-"));
+  const filename = join(fixture, "gemoire-admin.db");
+  let db;
+  try {
+    const rates = { AUD: 1.55, USD: 1, JPY: 155.25 };
+    db = new Database(filename);
+    db.exec("CREATE TABLE fx_rates_usd (code TEXT PRIMARY KEY, rate REAL NOT NULL, updated_at TEXT NOT NULL)");
+    const insert = db.prepare("INSERT INTO fx_rates_usd (code, rate, updated_at) VALUES (?, ?, ?)");
+    db.transaction(() => Object.entries(rates).forEach(([code, rate]) => insert.run(code, rate, STATIC_RATES_UPDATED_AT)))();
+    assert.deepEqual(db.prepare("SELECT code, rate, updated_at FROM fx_rates_usd ORDER BY code").all(), [
+      { code: "AUD", rate: 1.55, updated_at: STATIC_RATES_UPDATED_AT },
+      { code: "JPY", rate: 155.25, updated_at: STATIC_RATES_UPDATED_AT },
+      { code: "USD", rate: 1, updated_at: STATIC_RATES_UPDATED_AT },
+    ]);
+    assert.match(fxRateStore, /sqliteDatabasePath\(\)/, "FX snapshots must share the existing database path");
+    assert.match(fxRateStore, /CREATE TABLE IF NOT EXISTS fx_rates_usd/);
+    assert.match(fxRateStore, /ON CONFLICT\(code\) DO UPDATE/);
+    assert.match(fxRateStore, /DELETE FROM fx_rates_usd/);
+  } finally {
+    db?.close();
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("every public price surface derives display values from canonical USD", () => {
+  const publicPriceFiles = [
+    "src/components/commerce/product-card.tsx",
+    "src/components/commerce/product-detail.tsx",
+    "src/components/commerce/cart-drawer.tsx",
+    "src/components/commerce/cart-store.tsx",
+    "src/app/cart/page.tsx",
+    "src/app/checkout/page.tsx",
+    "src/app/account/page.tsx",
+    "src/app/invoice/[number]/page.tsx",
+    "src/components/layout/header.tsx",
+    "src/components/marketing/newsletter-band.tsx",
+  ];
+  for (const filename of publicPriceFiles) {
+    const source = read(filename);
+    assert.doesNotMatch(source, /usdFromAud|subtotalAud|adjustedAud|discountAud/, `${filename} still uses a parallel AUD conversion path`);
+  }
+  const invoice = read("src/app/invoice/[number]/page.tsx");
+  assert.match(invoice, /CurrencyAmount usd=\{invoice\.totalUsd\}/);
+  assert.doesNotMatch(invoice, /AUD \$|USD \$/);
+  assert.match(read("src/components/commerce/cart-store.tsx"), /usdPrice/);
+});
+
+test("admin pricing, reporting, settings, and stored records are USD based", () => {
+  const usdAdminFiles = [
+    "src/app/admin/page.tsx",
+    "src/app/admin/activity/page.tsx",
+    "src/components/admin/orders.tsx",
+    "src/components/admin/invoices.tsx",
+    "src/components/admin/customers.tsx",
+    "src/components/admin/reports.tsx",
+    "src/components/admin/connected-reports.tsx",
+    "src/components/admin/connected-admin-screens.tsx",
+    "src/components/admin/live-settings-screen.tsx",
+    "src/components/admin/repository-catalog-extras.tsx",
+    "src/components/admin/repository-discounts-screen.tsx",
+  ];
+  for (const filename of usdAdminFiles) {
+    const source = read(filename);
+    assert.doesNotMatch(source, /formatAdminAud|\bTotal AUD\b|\bRevenue AUD\b|\bGST AUD\b|\bAUD value\b|\(AUD\)/, `${filename} still exposes AUD as the admin base`);
+  }
+  assert.match(read("src/components/admin/connected-product-editor.tsx"), /Price USD \*/);
+  assert.doesNotMatch(read("src/components/admin/connected-product-editor.tsx"), /Price AUD/);
+  assert.match(repository, /currency-base-usd-v1/, "existing SQLite records need a one-time USD migration");
+  assert.match(repository, /baseCurrency: "USD"/, "new admin records must declare USD as their base");
+  assert.match(repository, /currencyPair: "USD \+ local currencies"/);
+  assert.match(types, /baseCurrency\?: "USD"/);
+});
+
+test("header exposes the requested click-to-call number", () => {
+  assert.match(header, /href="tel:\+918849760876"/, "the phone number must use a direct telephone link");
+  assert.match(header, /Contact Us/, "visitors must see the contact label");
+  assert.match(header, /\+91 884 976 0876/, "the requested formatted phone number must be visible");
+  assert.match(storefrontCss, /\.header-inner > \.header-contact \{ grid-column: 1; grid-row: 1; \}/, "the call link must stay on the left side of the header");
+  assert.match(header, /<HeaderPhone compact\/>/, "mobile visitors must retain a compact call action");
+});
 
 test("storefront responsive rules cover tablet, mobile, and narrow phones", () => {
   assert.match(storefrontCss, /html, body \{ max-width: 100%; overflow-x: clip; \}/, "the page must prevent accidental horizontal overflow");
@@ -101,14 +305,14 @@ test("metal selections survive card-to-product navigation and reject unknown que
   assert.equal(parseMetal(["invalid", "Platinum"]), undefined);
 });
 
-test("metal and diamond price changes preserve the existing configurator quote", () => {
-  const product = { audPrice: 3490 };
-  assert.equal(productPrice(product, "18ct Yellow Gold", "1.20ct"), 3490);
-  assert.equal(productPrice(product, "18ct White Gold", "1.20ct"), 3490);
-  assert.equal(productPrice(product, "18ct Rose Gold", "1.20ct"), 3580);
-  assert.equal(productPrice(product, "Platinum", "1.20ct"), 3770);
-  assert.equal(productPrice(product, "Platinum", "2.00ct"), 5020);
-  assert.equal(product.audPrice, 3490);
+test("metal and diamond price changes preserve the USD configurator quote", () => {
+  const product = { usdPrice: 2269 };
+  assert.equal(productPrice(product, "18ct Yellow Gold", "1.20ct"), 2269);
+  assert.equal(productPrice(product, "18ct White Gold", "1.20ct"), 2269);
+  assert.equal(productPrice(product, "18ct Rose Gold", "1.20ct"), 2328);
+  assert.equal(productPrice(product, "Platinum", "1.20ct"), 2451);
+  assert.equal(productPrice(product, "Platinum", "2.00ct"), 3264);
+  assert.equal(product.usdPrice, 2269);
 });
 
 test("shape links accept all nine silhouettes and safely normalize URL filters", () => {
@@ -219,6 +423,7 @@ test("all requested admin destinations are implemented as App Router pages", () 
 test("storefront integration routes cover checkout, navigation, settings and content", () => {
   const routes = [
     "api/catalog/route.ts",
+    "api/currency/rates/route.ts",
     "api/checkout/route.ts",
     "api/discounts/validate/route.ts",
     "api/storefront/bookings/route.ts",

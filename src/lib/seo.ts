@@ -54,7 +54,7 @@ function breadcrumbNode(pathname: string, finalLabel?: string): JsonLdNode | nul
 
 export function jsonLdForPath(
   pathname: string,
-  product?: { name: string; description: string; image: string; audPrice: number; rating: number; reviewCount: number; stock?: number },
+  product?: { name: string; description: string; image: string; usdPrice: number; rating: number; reviewCount: number; stock?: number },
 ) {
   const site = adminRepository.getSeoSite();
   const page = adminRepository.findSeoPage(pathname);
@@ -80,8 +80,8 @@ export function jsonLdForPath(
       image: product.image,
       offers: {
         "@type": "Offer",
-        priceCurrency: "AUD",
-        price: product.audPrice,
+        priceCurrency: "USD",
+        price: product.usdPrice,
         availability: product.stock === 0 ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
       },
       ...(product.reviewCount > 0 ? { aggregateRating: {

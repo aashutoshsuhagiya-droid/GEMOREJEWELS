@@ -10,6 +10,8 @@ import type {
 } from "@/shared/admin-types";
 import { siteUrl } from "@/shared/site-config";
 import { sqliteDatabasePath } from "@/lib/sqlite-storage";
+import { STATIC_USD_RATES } from "@/lib/currency";
+import { inferJewelryType, migrateProductJewelryTypes } from "@/lib/jewelry-type";
 
 type Sqlite = Database.Database;
 declare global { var __gemoireDb: Sqlite | undefined; }
@@ -24,10 +26,10 @@ const imagePool = [
 const firstNames = ["Maya", "Elliot", "Priya", "Olivia", "Amir", "Sofia", "Arjun", "Zoe", "Noah", "Isla"];
 const lastNames = ["Rao", "Bennett", "Patel", "Nguyen", "Morgan", "Kim", "Wilson", "Singh"];
 const settingsSeed: StoreSettings = {
-  id: "settings", storeName: "GEMOIREJEWELSLLP", currencyPair: "AUD + USD", locale: "en-AU", timezone: "Australia/Sydney", freeShippingThreshold: 40,
+  id: "settings", storeName: "GEMOIREJEWELSLLP", currencyPair: "USD + local currencies", baseCurrency: "USD", locale: "en-US", timezone: "Australia/Sydney", freeShippingThreshold: 26,
   shippingZones: [
-    { id: "australia", name: "Australia", rates: [{ id: "express", name: "Express", cost: 0, minDays: 1, maxDays: 3 }, { id: "standard", name: "Standard", cost: 15, minDays: 3, maxDays: 7 }] },
-    { id: "international", name: "International", rates: [{ id: "express", name: "Express", cost: 65, minDays: 4, maxDays: 8 }, { id: "standard", name: "Standard", cost: 35, minDays: 8, maxDays: 14 }] }
+    { id: "australia", name: "Australia", rates: [{ id: "express", name: "Express", cost: 0, minDays: 1, maxDays: 3 }, { id: "standard", name: "Standard", cost: 10, minDays: 3, maxDays: 7 }] },
+    { id: "international", name: "International", rates: [{ id: "express", name: "Express", cost: 42, minDays: 4, maxDays: 8 }, { id: "standard", name: "Standard", cost: 23, minDays: 8, maxDays: 14 }] }
   ],
   paymentEnabled: true,
   bankDetails: { accountName: "GEMOIREJEWELSLLP", bankName: "GEMOIRE Demo Bank", accountNumber: "0000 2026 0041", bic: "GEMOAU2S" },
@@ -59,18 +61,22 @@ function makeProducts(): AdminProduct[] {
   const settings = ["Solitaire", "Halo", "Bezel", "Three-Stone", "Toi et Moi", "East-West"];
   return designs.map((name, index) => {
     const collection = name.startsWith("Aaria") ? "aaria" : name.startsWith("Kavya") ? "kavya" : "mira";
-    const priceAud = 2690 + index * 115;
+    const priceUsd = 1749 + index * 75;
+    const priceAud = Math.round(priceUsd * STATIC_USD_RATES.AUD);
     const image = imagePool[index % imagePool.length];
     const description = "A considered balance of lab-grown diamond and precious metal, made for a lifetime of ordinary and extraordinary moments.";
-    return { id: `prod-${String(index + 1).padStart(3, "0")}`, slug: slugify(name), name, collectionIds: [collection], metal: index % 4 === 0 ? ["Platinum"] : index % 4 === 1 ? ["18ct Yellow Gold", "18ct White Gold"] : index % 4 === 2 ? ["18ct Rose Gold"] : ["18ct White Gold"], shape: shapes[index % shapes.length], setting: settings[index % settings.length], carat: `${(0.8 + (index % 8) * 0.15).toFixed(2)}ct`, clarity: index % 2 ? "VS1" : "VVS2", color: index % 3 ? "E" : "F", priceAud, priceUsd: Math.round(priceAud * .65), cost: Math.round(priceAud * .42), sku: `GM-${collection.slice(0, 3).toUpperCase()}-${String(index + 1).padStart(3, "0")}`, stock: (index * 3 + 2) % 17, igeCertNo: `IGI-GL-${39280 + index}`, images: [{ src: image, alt: `Placeholder product photography for ${name}`, isPrimary: true }, { src: imagePool[(index + 1) % imagePool.length], alt: `Hover placeholder for ${name}`, isPrimary: false }], hoverImage: imagePool[(index + 1) % imagePool.length], badges: index % 9 === 0 ? ["New"] : index % 7 === 0 ? ["Bestseller"] : [], description, details: "<h3>Made with intention</h3>Responsibly crafted in precious metal with a certified lab-grown diamond. <strong>Complimentary lifetime care</strong> is included.", seoTitle: name, seoDescription: description, ogImage: image, jsonLdEnabled: true, readyToShip: index % 5 === 0, featured: index < 6, status: index % 13 === 0 ? "draft" : "active", createdAt: isoDaysAgo(90 - index), rating: Number((4.6 + (index % 4) * .1).toFixed(1)), reviewCount: 18 + index * 7 };
+    return { jewelryType: inferJewelryType(name), id: `prod-${String(index + 1).padStart(3, "0")}`, slug: slugify(name), name, collectionIds: [collection], metal: index % 4 === 0 ? ["Platinum"] : index % 4 === 1 ? ["18ct Yellow Gold", "18ct White Gold"] : index % 4 === 2 ? ["18ct Rose Gold"] : ["18ct White Gold"], shape: shapes[index % shapes.length], setting: settings[index % settings.length], carat: `${(0.8 + (index % 8) * 0.15).toFixed(2)}ct`, clarity: index % 2 ? "VS1" : "VVS2", color: index % 3 ? "E" : "F", priceAud, priceUsd, cost: Math.round(priceUsd * .42), sku: `GM-${collection.slice(0, 3).toUpperCase()}-${String(index + 1).padStart(3, "0")}`, stock: (index * 3 + 2) % 17, igeCertNo: `IGI-GL-${39280 + index}`, images: [{ src: image, alt: `Placeholder product photography for ${name}`, isPrimary: true }, { src: imagePool[(index + 1) % imagePool.length], alt: `Hover placeholder for ${name}`, isPrimary: false }], hoverImage: imagePool[(index + 1) % imagePool.length], badges: index % 9 === 0 ? ["New"] : index % 7 === 0 ? ["Bestseller"] : [], description, details: "<h3>Made with intention</h3>Responsibly crafted in precious metal with a certified lab-grown diamond. <strong>Complimentary lifetime care</strong> is included.", seoTitle: name, seoDescription: description, ogImage: image, jsonLdEnabled: true, readyToShip: index % 5 === 0, featured: index < 6, status: index % 13 === 0 ? "draft" : "active", createdAt: isoDaysAgo(90 - index), rating: Number((4.6 + (index % 4) * .1).toFixed(1)), reviewCount: 18 + index * 7, baseCurrency: "USD" };
   });
 }
-function makeCustomers(): Customer[] { return Array.from({ length: 80 }, (_, index) => { const first = firstNames[index % firstNames.length]; const last = lastNames[index % lastNames.length]; return { id: `cust-${String(index + 1).padStart(3, "0")}`, name: `${first} ${last}`, email: `${first.toLowerCase()}.${last.toLowerCase()}${index + 1}@example.com`, tags: index % 9 === 0 ? ["VIP"] : index % 4 === 0 ? ["Repeat"] : index % 7 === 0 ? ["Proposal-Season"] : [], totalSpent: 0, orderCount: 0, notes: index % 11 === 0 ? "Prefers a quiet, considered client-service experience." : "", address: `${10 + index} Collins Street, Melbourne VIC 3000`, createdAt: isoDaysAgo(120 - index), vasStatus: index % 5 === 0 ? "Active" : "None" }; }); }
-function makeOrders(products: AdminProduct[], customers: Customer[]): Order[] { return Array.from({ length: 60 }, (_, index) => { const product = products[index % products.length]; const quantity = index % 11 === 0 ? 2 : 1; const subtotal = product.priceAud * quantity; const gstAmount = Math.round(subtotal * .18); const status: OrderStatus = index % 17 === 0 ? "Cancelled" : index % 8 === 0 ? "Delivered" : index % 5 === 0 ? "Shipped" : index % 3 === 0 ? "Crafting" : "Processing"; const paymentStatus: PaymentStatus = status === "Cancelled" ? "Refunded" : index % 6 === 0 ? "Pending" : "Paid"; const createdAt = isoDaysAgo(index + 1); return { id: `order-${String(index + 1).padStart(3, "0")}`, code: `GM-2026-${String(index + 1).padStart(4, "0")}`, customerId: customers[index % customers.length].id, items: [{ productId: product.id, variant: `${product.carat} · ${product.metal[0]}`, qty: quantity, lineTotal: subtotal, hsnCode: "7113" }], subtotal, gstRate: 18, gstAmount, shipping: subtotal > 40 ? 0 : 25, totalAud: subtotal + gstAmount, totalUsd: Math.round((subtotal + gstAmount) * .65), status, paymentStatus, paymentMethod: index % 2 ? "Visa" : "G Pay", createdAt, timeline: [{ stage: "Order created", at: createdAt }, ...(paymentStatus === "Paid" ? [{ stage: "Payment received", at: isoDaysAgo(index) }] : []), ...(status !== "Processing" && status !== "Cancelled" ? [{ stage: "Crafting started", at: isoDaysAgo(Math.max(0, index - 1)) }] : []), ...(status === "Shipped" || status === "Delivered" ? [{ stage: "Shipped", at: isoDaysAgo(Math.max(0, index - 2)) }] : [])], craftStage: status === "Delivered" || status === "Shipped" ? 3 : status === "Crafting" ? 1 : 0, trackingCode: status === "Shipped" || status === "Delivered" ? `GMX${20260000 + index}` : undefined, notes: index % 10 === 0 ? "Please call before delivery." : "" }; }); }
-function makeInvoices(orders: Order[]): Invoice[] { return orders.filter(order => order.paymentStatus === "Paid" || order.paymentStatus === "Refunded").map((order, index) => ({ id: `invoice-${String(index + 1).padStart(3, "0")}`, number: `${settingsSeed.billing.prefix}2026-${String(index + 1).padStart(4, "0")}`, orderId: order.id, customerId: order.customerId, issuedAt: order.createdAt, dueAt: order.createdAt, lines: order.items.map(item => ({ desc: `GEMOIREJEWELSLLP fine jewellery · ${item.variant}`, hsn: item.hsnCode, qty: item.qty, rate: Math.round(item.lineTotal / item.qty), amount: item.lineTotal })), subtotal: order.subtotal, cgst: Math.round(order.gstAmount / 2), sgst: Math.round(order.gstAmount / 2), shipping: order.shipping, totalAud: order.totalAud, totalUsd: order.totalUsd, status: order.paymentStatus === "Refunded" ? "refunded" : "paid", stampDate: order.createdAt, method: order.paymentMethod, billingSnapshot: invoiceBillingSnapshot(settingsSeed) })); }
+function makeCustomers(): Customer[] { return Array.from({ length: 80 }, (_, index) => { const first = firstNames[index % firstNames.length]; const last = lastNames[index % lastNames.length]; return { id: `cust-${String(index + 1).padStart(3, "0")}`, name: `${first} ${last}`, email: `${first.toLowerCase()}.${last.toLowerCase()}${index + 1}@example.com`, tags: index % 9 === 0 ? ["VIP"] : index % 4 === 0 ? ["Repeat"] : index % 7 === 0 ? ["Proposal-Season"] : [], totalSpent: 0, orderCount: 0, notes: index % 11 === 0 ? "Prefers a quiet, considered client-service experience." : "", address: `${10 + index} Collins Street, Melbourne VIC 3000`, createdAt: isoDaysAgo(120 - index), vasStatus: index % 5 === 0 ? "Active" : "None", baseCurrency: "USD" }; }); }
+function makeOrders(products: AdminProduct[], customers: Customer[]): Order[] { return Array.from({ length: 60 }, (_, index) => { const product = products[index % products.length]; const quantity = index % 11 === 0 ? 2 : 1; const subtotal = product.priceUsd * quantity; const gstAmount = Math.round(subtotal * .18); const shipping = subtotal > settingsSeed.freeShippingThreshold ? 0 : 16; const totalUsd = subtotal + gstAmount + shipping; const status: OrderStatus = index % 17 === 0 ? "Cancelled" : index % 8 === 0 ? "Delivered" : index % 5 === 0 ? "Shipped" : index % 3 === 0 ? "Crafting" : "Processing"; const paymentStatus: PaymentStatus = status === "Cancelled" ? "Refunded" : index % 6 === 0 ? "Pending" : "Paid"; const createdAt = isoDaysAgo(index + 1); return { id: `order-${String(index + 1).padStart(3, "0")}`, code: `GM-2026-${String(index + 1).padStart(4, "0")}`, customerId: customers[index % customers.length].id, items: [{ productId: product.id, variant: `${product.carat} · ${product.metal[0]}`, qty: quantity, lineTotal: subtotal, hsnCode: "7113" }], subtotal, gstRate: 18, gstAmount, shipping, totalAud: Math.round(totalUsd * STATIC_USD_RATES.AUD), totalUsd, status, paymentStatus, paymentMethod: index % 2 ? "Visa" : "G Pay", createdAt, timeline: [{ stage: "Order created", at: createdAt }, ...(paymentStatus === "Paid" ? [{ stage: "Payment received", at: isoDaysAgo(index) }] : []), ...(status !== "Processing" && status !== "Cancelled" ? [{ stage: "Crafting started", at: isoDaysAgo(Math.max(0, index - 1)) }] : []), ...(status === "Shipped" || status === "Delivered" ? [{ stage: "Shipped", at: isoDaysAgo(Math.max(0, index - 2)) }] : [])], craftStage: status === "Delivered" || status === "Shipped" ? 3 : status === "Crafting" ? 1 : 0, trackingCode: status === "Shipped" || status === "Delivered" ? `GMX${20260000 + index}` : undefined, notes: index % 10 === 0 ? "Please call before delivery." : "", baseCurrency: "USD" }; }); }
+function makeInvoices(orders: Order[]): Invoice[] { return orders.filter(order => order.paymentStatus === "Paid" || order.paymentStatus === "Refunded").map((order, index) => ({ id: `invoice-${String(index + 1).padStart(3, "0")}`, number: `${settingsSeed.billing.prefix}2026-${String(index + 1).padStart(4, "0")}`, orderId: order.id, customerId: order.customerId, issuedAt: order.createdAt, dueAt: order.createdAt, lines: order.items.map(item => ({ desc: `GEMOIREJEWELSLLP fine jewellery · ${item.variant}`, hsn: item.hsnCode, qty: item.qty, rate: Math.round(item.lineTotal / item.qty), amount: item.lineTotal })), subtotal: order.subtotal, cgst: Math.round(order.gstAmount / 2), sgst: Math.round(order.gstAmount / 2), shipping: order.shipping, totalAud: order.totalAud, totalUsd: order.totalUsd, status: order.paymentStatus === "Refunded" ? "refunded" : "paid", stampDate: order.createdAt, method: order.paymentMethod, billingSnapshot: invoiceBillingSnapshot(settingsSeed), baseCurrency: "USD" })); }
 
 function database(): Sqlite {
-  if (global.__gemoireDb) return global.__gemoireDb;
+  if (global.__gemoireDb) {
+    migrateProductJewelryTypes(global.__gemoireDb);
+    return global.__gemoireDb;
+  }
   const filename = sqliteDatabasePath();
   fs.mkdirSync(path.dirname(filename), { recursive: true });
   const db = new Database(filename);
@@ -78,17 +84,54 @@ function database(): Sqlite {
   db.exec("CREATE TABLE IF NOT EXISTS entity_store (kind TEXT NOT NULL, id TEXT NOT NULL, json TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(kind, id)); CREATE TABLE IF NOT EXISTS meta_store (key TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);");
   global.__gemoireDb = db;
   seed(db);
+  migrateStoredCurrencyToUsd(db);
+  migrateProductJewelryTypes(db);
   synchronizeAllProductReviewSummaries();
   return db;
 }
 function put<T extends { id: string }>(db: Sqlite, kind: string, value: T) { db.prepare("INSERT INTO entity_store (kind,id,json,updated_at) VALUES (@kind,@id,@json,@updatedAt) ON CONFLICT(kind,id) DO UPDATE SET json=excluded.json,updated_at=excluded.updated_at").run({ kind, id: value.id, json: JSON.stringify(value), updatedAt: new Date().toISOString() }); }
 function putMeta<T>(db: Sqlite, key: string, value: T) { db.prepare("INSERT INTO meta_store (key,json,updated_at) VALUES (@key,@json,@updatedAt) ON CONFLICT(key) DO UPDATE SET json=excluded.json,updated_at=excluded.updated_at").run({ key, json: JSON.stringify(value), updatedAt: new Date().toISOString() }); }
+function migrateStoredCurrencyToUsd(db: Sqlite) {
+  const migrationKey = "currency-base-usd-v1";
+  if (db.prepare("SELECT 1 FROM meta_store WHERE key=?").get(migrationKey)) return;
+  const updateEntity = db.prepare("UPDATE entity_store SET json=?, updated_at=? WHERE kind=? AND id=?");
+  const migrateKind = <T extends { id: string }>(kind: string, convert: (value: T) => T) => {
+    const rows = db.prepare("SELECT id, json FROM entity_store WHERE kind=?").all(kind) as Array<{ id: string; json: string }>;
+    for (const row of rows) updateEntity.run(JSON.stringify(convert(JSON.parse(row.json) as T)), new Date().toISOString(), kind, row.id);
+  };
+  const usdFactor = (totalAud: number, totalUsd: number) => totalAud > 0 && totalUsd > 0 ? totalUsd / totalAud : .65;
+  const convertMoney = (value: number | undefined, factor: number) => value === undefined ? undefined : Math.round(value * factor);
+
+  db.transaction(() => {
+    migrateKind<AdminProduct>("products", product => product.baseCurrency === "USD" ? product : { ...product, cost: Math.round(product.cost * .65), baseCurrency: "USD" });
+    migrateKind<Order>("orders", order => {
+      if (order.baseCurrency === "USD") return order;
+      const factor = usdFactor(order.totalAud, order.totalUsd);
+      return { ...order, items: order.items.map(item => ({ ...item, lineTotal: Math.round(item.lineTotal * factor) })), subtotal: Math.round(order.subtotal * factor), gstAmount: Math.round(order.gstAmount * factor), shipping: Math.round(order.shipping * factor), discountAmount: convertMoney(order.discountAmount, factor), baseCurrency: "USD" };
+    });
+    migrateKind<Invoice>("invoices", invoice => {
+      if (invoice.baseCurrency === "USD") return invoice;
+      const factor = usdFactor(invoice.totalAud, invoice.totalUsd);
+      return { ...invoice, lines: invoice.lines.map(line => ({ ...line, rate: Math.round(line.rate * factor), amount: Math.round(line.amount * factor) })), subtotal: Math.round(invoice.subtotal * factor), cgst: Math.round(invoice.cgst * factor), sgst: Math.round(invoice.sgst * factor), shipping: Math.round(invoice.shipping * factor), discountAmount: convertMoney(invoice.discountAmount, factor), baseCurrency: "USD" };
+    });
+    migrateKind<Customer>("customers", customer => customer.baseCurrency === "USD" ? customer : { ...customer, totalSpent: Math.round(customer.totalSpent * .65), baseCurrency: "USD" });
+    migrateKind<CreditNote>("creditNotes", credit => credit.baseCurrency === "USD" ? credit : { ...credit, amount: Math.round(credit.amount * .65), baseCurrency: "USD" });
+    migrateKind<Collection>("collections", collection => collection.baseCurrency === "USD" ? collection : { ...collection, revenue30d: Math.round(collection.revenue30d * .65), baseCurrency: "USD" });
+    migrateKind<Discount>("discounts", discount => discount.baseCurrency === "USD" ? discount : { ...discount, value: discount.type === "fixed" ? Math.round(discount.value * .65) : discount.value, baseCurrency: "USD" });
+    const settingsRow = db.prepare("SELECT json FROM meta_store WHERE key='settings'").get() as { json: string } | undefined;
+    if (settingsRow) {
+      const settings = JSON.parse(settingsRow.json) as StoreSettings;
+      if (settings.baseCurrency !== "USD") putMeta(db, "settings", { ...settings, currencyPair: "USD + local currencies", baseCurrency: "USD", locale: "en-US", freeShippingThreshold: Math.round(settings.freeShippingThreshold * .65), shippingZones: settings.shippingZones.map(zone => ({ ...zone, rates: zone.rates.map(rate => ({ ...rate, cost: Math.round(rate.cost * .65) })) })) });
+    }
+    putMeta(db, migrationKey, { completedAt: new Date().toISOString(), baseCurrency: "USD" });
+  })();
+}
 function seed(db: Sqlite) {
   const seeded = db.prepare("SELECT json FROM meta_store WHERE key='seed-version'").get() as { json: string } | undefined;
   if (seeded?.json === '"2026-11-admin-v1"') return;
   const products = makeProducts(); const customers = makeCustomers(); const orders = makeOrders(products, customers);
-  orders.forEach(order => { const customer = customers.find(item => item.id === order.customerId)!; if (order.paymentStatus !== "Pending") customer.totalSpent += order.totalAud; customer.orderCount += 1; });
-  const collections: Collection[] = ["Aaria", "Kavya", "Mira"].map((name, index) => ({ id: name.toLowerCase(), name, slug: name.toLowerCase(), description: `${name} is a quietly considered GEMOIREJEWELSLLP collection.`, coverImage: imagePool[index], productIds: products.filter(product => product.collectionIds.includes(name.toLowerCase())).map(product => product.id), homepage: true, homepageOrder: index, megaProductId: products[index].id, revenue30d: 28700 + index * 8640 })).concat([{ id: "ready-to-ship", name: "Ready-to-Ship", slug: "ready-to-ship", description: "Pieces ready to begin their next chapter this week.", coverImage: imagePool[3], productIds: products.filter(product => product.readyToShip).map(product => product.id), homepage: true, homepageOrder: 3, megaProductId: products[4].id, revenue30d: 21430 }]);
+  orders.forEach(order => { const customer = customers.find(item => item.id === order.customerId)!; if (order.paymentStatus !== "Pending") customer.totalSpent += order.totalUsd; customer.orderCount += 1; });
+  const collections: Collection[] = ["Aaria", "Kavya", "Mira"].map((name, index) => ({ id: name.toLowerCase(), name, slug: name.toLowerCase(), description: `${name} is a quietly considered GEMOIREJEWELSLLP collection.`, coverImage: imagePool[index], productIds: products.filter(product => product.collectionIds.includes(name.toLowerCase())).map(product => product.id), homepage: true, homepageOrder: index, megaProductId: products[index].id, revenue30d: 18655 + index * 5616, baseCurrency: "USD" as const })).concat([{ id: "ready-to-ship", name: "Ready-to-Ship", slug: "ready-to-ship", description: "Pieces ready to begin their next chapter this week.", coverImage: imagePool[3], productIds: products.filter(product => product.readyToShip).map(product => product.id), homepage: true, homepageOrder: 3, megaProductId: products[4].id, revenue30d: 13930, baseCurrency: "USD" as const }]);
   const faqs: Faq[] = ["How long will my ring take to craft?", "Do you ship worldwide?", "What is a lab-grown diamond?", "Which diamond shape is right for me?", "Is there a lifetime warranty?", "Do you offer moissanite?", "Where are your showrooms?", "Will my diamond come with certification?"].map((question, index) => ({ id: `faq-${index + 1}`, question, answer: index === 0 ? "Most made-to-order rings are crafted in four to six weeks. Ready-to-ship pieces leave our studio within ten business days." : "Our client care team will guide you through every detail with clear, considered advice.", position: index, published: true }));
   const reviews: Review[] = Array.from({ length: 12 }, (_, index) => ({ id: `review-${index + 1}`, productId: products[index % products.length].id, customerName: customers[index].name, city: ["Melbourne", "Sydney", "Brisbane"][index % 3], rating: index % 5 === 0 ? 4 : 5, quote: "The whole experience felt unhurried, considered and beautifully personal.", status: "published", createdAt: isoDaysAgo(index + 3), reply: index % 3 === 0 ? "Thank you for trusting us with such a meaningful piece." : undefined }));
   const discounts: Discount[] = [{ id: "disc-1", code: "GEMOIRE-10", type: "percentage", value: 10, scope: "sitewide", expiresAt: "2026-12-31", usageCount: 34, usageCap: 100, status: "active" }, { id: "disc-2", code: "SHIPWITHCARE", type: "shipping", value: 0, scope: "sitewide", expiresAt: "2027-01-31", usageCount: 18, usageCap: 50, status: "active" }];
@@ -108,13 +151,13 @@ function seed(db: Sqlite) {
   ];
   seoPages.push(
     ...collections.map(collection => ({ id: `seo-collection-${collection.id}`, pageType: "collection" as const, slug: `/collections/${collection.slug}`, title: `${collection.name} collection`, description: collection.description, canonical: siteUrl(`/collections/${collection.slug}`), ogImage: collection.coverImage, jsonLdType: "WebSite" as const, status: "published" as const })),
-    ...[{ slug: "engagement", title: "Engagement Rings", description: "Lab-grown diamond rings that make the beginning feel entirely like you." }, { slug: "wedding", title: "Wedding Rings", description: "Considered bands and three-stone designs for the promise you make every day." }, { slug: "fine-jewelry", title: "Fine Jewellery", description: "Diamond details designed to become part of your own signature." }].map((page, index) => ({ id: `seo-plp-${page.slug}`, pageType: "collection" as const, slug: `/collections/${page.slug}`, title: page.title, description: page.description, canonical: siteUrl(`/collections/${page.slug}`), ogImage: imagePool[index], jsonLdType: "WebSite" as const, status: "published" as const })),
+    ...[{ slug: "engagement", title: "Engagement Rings", description: "Lab-grown diamond rings that make the beginning feel entirely like you." }, { slug: "wedding", title: "Wedding Rings", description: "Considered bands and three-stone designs for the promise you make every day." }, { slug: "fine-jewelry", title: "Fine Jewellery", description: "Diamond details designed to become part of your own signature." }, { slug: "sale", title: "Sale", description: "Considered pieces, priced to be collected." }, { slug: "loose-stones", title: "Loose Stones", description: "Loose lab-grown diamonds for bespoke settings." }, { slug: "gifts", title: "Gifts", description: "Pieces chosen for the people you keep." }, { slug: "earrings", title: "Earrings", description: "Considered earrings from quiet studs to statement drops." }, { slug: "bracelets", title: "Bracelets", description: "Delicate bracelets designed to layer with everything." }, { slug: "necklaces", title: "Necklaces", description: "Pendants and chains that finish the way you start." }].map((page, index) => ({ id: `seo-plp-${page.slug}`, pageType: "collection" as const, slug: `/collections/${page.slug}`, title: page.title, description: page.description, canonical: siteUrl(`/collections/${page.slug}`), ogImage: imagePool[index % imagePool.length], jsonLdType: "WebSite" as const, status: "published" as const })),
     { id: "seo-checkout", pageType: "checkout", slug: "/checkout", title: "Checkout", description: "Complete your considered GEMOIREJEWELSLLP order.", canonical: siteUrl("/checkout"), ogImage: imagePool[0], jsonLdType: "WebSite", status: "draft" },
     { id: "seo-404", pageType: "404", slug: "/404", title: "Lost your way?", description: "Find a considered place to begin with GEMOIREJEWELSLLP.", canonical: siteUrl("/404"), ogImage: imagePool[0], jsonLdType: "WebSite", status: "draft" }
   );
   const redirects: RedirectRule[] = [{ id: "redirect-1", from: "/rings/old-solitaire", to: "/products/aaria-classic-solitaire", type: 301, hits: 28, active: true }];
   const invoices = makeInvoices(orders);
-  const creditNotes: CreditNote[] = invoices.filter(invoice => invoice.status === "refunded").slice(0, 2).map((invoice, index) => ({ id: `credit-${index + 1}`, number: `CN-GM-2026-${String(index + 1).padStart(4, "0")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalAud, reason: index === 0 ? "Cancelled before dispatch" : "Returned to studio", createdAt: isoDaysAgo(4 + index * 12) }));
+  const creditNotes: CreditNote[] = invoices.filter(invoice => invoice.status === "refunded").slice(0, 2).map((invoice, index) => ({ id: `credit-${index + 1}`, number: `CN-GM-2026-${String(index + 1).padStart(4, "0")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalUsd, reason: index === 0 ? "Cancelled before dispatch" : "Returned to studio", createdAt: isoDaysAgo(4 + index * 12), baseCurrency: "USD" }));
   creditNotes.forEach(credit => { const invoice = invoices.find(item => item.id === credit.invoiceId); if (invoice) invoice.creditNoteId = credit.id; });
   ([ ["products", products], ["customers", customers], ["orders", orders], ["invoices", invoices], ["creditNotes", creditNotes], ["collections", collections], ["faqs", faqs], ["reviews", reviews], ["discounts", discounts], ["subscribers", subscribers], ["instagram", instagram], ["blog", blog], ["bookings", bookings], ["craft", craft], ["quizQuestions", quizQuestions], ["quizOutcomes", quizOutcomes], ["seoPages", seoPages], ["redirects", redirects] ] as Array<[string, Array<{ id: string }>]>) .forEach(([kind, values]) => values.forEach(value => put(db, kind, value)));
   putMeta(db, "settings", settingsSeed); putMeta(db, "seo-site", seoSiteSeed); putMeta(db, "seo-analytics", seoAnalyticsSeed); putMeta(db, "seed-version", "2026-11-admin-v1");
@@ -195,7 +238,7 @@ function synchronizeCollection(collection: Collection) {
   } satisfies SeoPage);
 }
 
-type StorefrontLineInput = { slug: string; quantity: number; audPrice?: number; metal?: string; carat?: string; setting?: string };
+type StorefrontLineInput = { slug: string; quantity: number; usdPrice?: number; metal?: string; carat?: string; setting?: string };
 type StorefrontSelection = { product: AdminProduct; quantity: number; price: number; variant: string };
 
 function selectStorefrontProducts(items: StorefrontLineInput[]): StorefrontSelection[] {
@@ -204,8 +247,8 @@ function selectStorefrontProducts(items: StorefrontLineInput[]): StorefrontSelec
     if (!product) throw new Error("One of the selected pieces is no longer available.");
     const quantity = Math.max(1, Math.min(9, Math.floor(Number(item.quantity) || 1)));
     if (product.stock < quantity) throw new Error(`${product.name} no longer has enough stock available.`);
-    const requestedPrice = Number(item.audPrice);
-    const price = Number.isFinite(requestedPrice) && requestedPrice >= product.priceAud && requestedPrice <= product.priceAud * 2 ? Math.round(requestedPrice) : product.priceAud;
+    const requestedPrice = Number(item.usdPrice);
+    const price = Number.isFinite(requestedPrice) && requestedPrice >= product.priceUsd && requestedPrice <= product.priceUsd * 2 ? Math.round(requestedPrice) : product.priceUsd;
     return { product, quantity, price, variant: [item.carat ?? product.carat, item.metal ?? product.metal[0], item.setting ?? product.setting].filter(Boolean).join(" · ") };
   });
 }
@@ -237,6 +280,10 @@ export const adminRepository = {
   upsert<K extends EntityName>(kind: K, value: EntityMap[K]) {
     const db = database();
     const previousReview = kind === "reviews" ? entityGet("reviews", value.id) : undefined;
+    if (kind === "products") {
+      const product = value as AdminProduct;
+      value = { ...product, jewelryType: product.jewelryType ?? entityGet("products", product.id)?.jewelryType ?? "ring" } as EntityMap[K];
+    }
     db.transaction(() => {
       put(db, kind, value);
       if (kind === "products") synchronizeProductSeo(value as AdminProduct);
@@ -301,17 +348,18 @@ export const adminRepository = {
       const discountAmount = discountQuote?.amount ?? 0;
       const taxableSubtotal = Math.max(0, subtotal - discountAmount);
       const gstAmount = Math.round(taxableSubtotal * settings.billing.gstRate / 100);
-      const shipping = discountQuote?.shippingFree || taxableSubtotal >= settings.freeShippingThreshold ? 0 : 25;
-      const totalAud = taxableSubtotal + gstAmount + shipping;
+      const shipping = discountQuote?.shippingFree || taxableSubtotal >= settings.freeShippingThreshold ? 0 : 16;
+      const totalUsd = taxableSubtotal + gstAmount + shipping;
+      const totalAud = Math.round(totalUsd * STATIC_USD_RATES.AUD);
       const email = input.customer.email.trim().toLowerCase();
       if (!email) throw new Error("An email address is required to create your order.");
       const customerName = input.customer.name.trim() || "GEMOIREJEWELSLLP client";
       const existingCustomer = entityList("customers").find(customer => customer.email.toLowerCase() === email);
-      const customer: Customer = existingCustomer ? { ...existingCustomer, name: customerName, address: input.customer.address.trim() || existingCustomer.address, totalSpent: existingCustomer.totalSpent + (paymentCaptured ? totalAud : 0), orderCount: existingCustomer.orderCount + 1 } : { id: `cust-${crypto.randomUUID()}`, name: customerName, email, tags: [], totalSpent: paymentCaptured ? totalAud : 0, orderCount: 1, notes: "", address: input.customer.address.trim() || "Address supplied at checkout", createdAt, vasStatus: "None" };
+      const customer: Customer = existingCustomer ? { ...existingCustomer, name: customerName, address: input.customer.address.trim() || existingCustomer.address, totalSpent: existingCustomer.totalSpent + (paymentCaptured ? totalUsd : 0), orderCount: existingCustomer.orderCount + 1, baseCurrency: "USD" } : { id: `cust-${crypto.randomUUID()}`, name: customerName, email, tags: [], totalSpent: paymentCaptured ? totalUsd : 0, orderCount: 1, notes: "", address: input.customer.address.trim() || "Address supplied at checkout", createdAt, vasStatus: "None", baseCurrency: "USD" };
       const orderNumber = Math.max(0, ...entityList("orders").map(order => Number(order.code.split("-").at(-1)) || 0)) + 1;
       const invoiceNumber = Math.max(0, ...entityList("invoices").map(invoice => Number(invoice.number.split("-").at(-1)) || 0)) + 1;
-      const order: Order = { id: `order-${crypto.randomUUID()}`, code: `GM-2026-${String(orderNumber).padStart(4, "0")}`, customerId: customer.id, items: products.map(item => ({ productId: item.product.id, variant: item.variant, qty: item.quantity, lineTotal: item.price * item.quantity, hsnCode: hsnForProduct(item.product, settings) })), subtotal, gstRate: settings.billing.gstRate, gstAmount, shipping, totalAud, totalUsd: Math.round(totalAud * .65), status: paymentCaptured ? "Processing" : "Pending", paymentStatus: paymentCaptured ? "Paid" : "Pending", paymentMethod: paymentCaptured ? "Mock card" : "Awaiting manual payment", createdAt, timeline: paymentCaptured ? [{ stage: "Order created", at: createdAt }, { stage: "Payment received", at: createdAt }] : [{ stage: "Order created", at: createdAt }], craftStage: 0, discountCode: discountQuote?.discount.code, discountAmount: discountAmount || undefined };
-      const invoice: Invoice | undefined = paymentCaptured ? { id: `invoice-${crypto.randomUUID()}`, number: `${settings.billing.prefix}2026-${String(invoiceNumber).padStart(4, "0")}`, orderId: order.id, customerId: customer.id, issuedAt: createdAt, dueAt: createdAt, lines: order.items.map((item, index) => ({ desc: `${products[index].product.name} · ${item.variant}`, hsn: item.hsnCode, qty: item.qty, rate: Math.round(item.lineTotal / item.qty), amount: item.lineTotal })), subtotal, cgst: settings.billing.splitGst ? Math.floor(gstAmount / 2) : gstAmount, sgst: settings.billing.splitGst ? gstAmount - Math.floor(gstAmount / 2) : 0, shipping, totalAud, totalUsd: order.totalUsd, status: "paid", stampDate: createdAt, method: order.paymentMethod, discountCode: order.discountCode, discountAmount: order.discountAmount, billingSnapshot: invoiceBillingSnapshot(settings) } : undefined;
+      const order: Order = { id: `order-${crypto.randomUUID()}`, code: `GM-2026-${String(orderNumber).padStart(4, "0")}`, customerId: customer.id, items: products.map(item => ({ productId: item.product.id, variant: item.variant, qty: item.quantity, lineTotal: item.price * item.quantity, hsnCode: hsnForProduct(item.product, settings) })), subtotal, gstRate: settings.billing.gstRate, gstAmount, shipping, totalAud, totalUsd, status: paymentCaptured ? "Processing" : "Pending", paymentStatus: paymentCaptured ? "Paid" : "Pending", paymentMethod: paymentCaptured ? "Mock card" : "Awaiting manual payment", createdAt, timeline: paymentCaptured ? [{ stage: "Order created", at: createdAt }, { stage: "Payment received", at: createdAt }] : [{ stage: "Order created", at: createdAt }], craftStage: 0, discountCode: discountQuote?.discount.code, discountAmount: discountAmount || undefined, baseCurrency: "USD" };
+      const invoice: Invoice | undefined = paymentCaptured ? { id: `invoice-${crypto.randomUUID()}`, number: `${settings.billing.prefix}2026-${String(invoiceNumber).padStart(4, "0")}`, orderId: order.id, customerId: customer.id, issuedAt: createdAt, dueAt: createdAt, lines: order.items.map((item, index) => ({ desc: `${products[index].product.name} · ${item.variant}`, hsn: item.hsnCode, qty: item.qty, rate: Math.round(item.lineTotal / item.qty), amount: item.lineTotal })), subtotal, cgst: settings.billing.splitGst ? Math.floor(gstAmount / 2) : gstAmount, sgst: settings.billing.splitGst ? gstAmount - Math.floor(gstAmount / 2) : 0, shipping, totalAud, totalUsd: order.totalUsd, status: "paid", stampDate: createdAt, method: order.paymentMethod, discountCode: order.discountCode, discountAmount: order.discountAmount, billingSnapshot: invoiceBillingSnapshot(settings), baseCurrency: "USD" } : undefined;
       put(db, "customers", customer); put(db, "orders", order); if (invoice) put(db, "invoices", invoice);
       products.forEach(item => put(db, "products", { ...item.product, stock: item.product.stock - item.quantity }));
       put(db, "craft", { id: order.id, orderId: order.id, stage: 0, dates: [createdAt], expectedDates: [createdAt, isoDaysAgo(-14), isoDaysAgo(-28), isoDaysAgo(-42)], blocked: false });
@@ -337,7 +385,8 @@ export const adminRepository = {
         paymentStatus: "Paid",
         paymentMethod: order.paymentMethod === "Awaiting manual payment" ? "Manual payment" : order.paymentMethod,
         status: order.status === "Pending" ? "Processing" : order.status,
-        timeline: [...order.timeline, { stage: "Payment received", at: paidAt }]
+        timeline: [...order.timeline, { stage: "Payment received", at: paidAt }],
+        baseCurrency: "USD"
       };
       const snapshot = { ...invoiceBillingSnapshot(settings), gstRate: order.gstRate };
       let invoice = existingInvoice;
@@ -366,7 +415,8 @@ export const adminRepository = {
           method: paid.paymentMethod,
           discountCode: paid.discountCode,
           discountAmount: paid.discountAmount,
-          billingSnapshot: appliedSnapshot
+          billingSnapshot: appliedSnapshot,
+          baseCurrency: "USD"
         };
       } else if (invoice.status === "due") {
         invoice = {
@@ -380,24 +430,26 @@ export const adminRepository = {
           sgst: splitGst ? gstAmount - Math.floor(gstAmount / 2) : 0,
           discountCode: paid.discountCode,
           discountAmount: paid.discountAmount,
-          billingSnapshot: appliedSnapshot
+          billingSnapshot: appliedSnapshot,
+          baseCurrency: "USD"
         };
       }
 
       const customer = entityGet("customers", paid.customerId);
       put(db, "orders", paid);
-      if (!paymentWasCaptured && customer) put(db, "customers", { ...customer, totalSpent: customer.totalSpent + paid.totalAud });
+      if (!paymentWasCaptured && customer) put(db, "customers", { ...customer, totalSpent: customer.totalSpent + paid.totalUsd, baseCurrency: "USD" });
       if (invoice) put(db, "invoices", invoice);
       return { order: paid, invoice };
     })();
   },
   markShipped(id: string) { const order = entityGet("orders", id); if (!order) throw new Error("Order not found"); const shippedAt = new Date().toISOString(); const shipped: Order = { ...order, status: "Shipped", trackingCode: order.trackingCode ?? `GMX${Math.floor(10000000 + Math.random() * 89999999)}`, craftStage: 3, timeline: [...order.timeline, { stage: "Shipped", at: shippedAt }] }; const craft = entityGet("craft", id); database().transaction(() => { put(database(), "orders", shipped); put(database(), "craft", craft ? { ...craft, stage: 3, dates: [...craft.dates, shippedAt] } : { id, orderId: id, stage: 3, dates: [shippedAt], expectedDates: [], blocked: false }); })(); return shipped; },
-  refundInvoice(id: string) { const invoice = entityGet("invoices", id); if (!invoice) throw new Error("Invoice not found"); if (invoice.status === "refunded") return { invoice, credit: invoice.creditNoteId ? entityGet("creditNotes", invoice.creditNoteId) : undefined, order: entityGet("orders", invoice.orderId) }; const order = entityGet("orders", invoice.orderId); if (!order) throw new Error("Order not found"); if (order.status !== "Cancelled") throw new Error("Only a cancelled order can be refunded."); const refundedAt = new Date().toISOString(); const credit: CreditNote = { id: `credit-${crypto.randomUUID()}`, number: `CN-GM-2026-${String(entityList("creditNotes").length + 1).padStart(4, "0")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalAud, reason: "Refunded by demo administrator", createdAt: refundedAt }; const refunded: Invoice = { ...invoice, status: "refunded", stampDate: refundedAt, creditNoteId: credit.id }; const refundedOrder: Order = { ...order, status: "Cancelled", paymentStatus: "Refunded", timeline: [...order.timeline, { stage: "Refunded", at: refundedAt }] }; put(database(), "creditNotes", credit); put(database(), "invoices", refunded); put(database(), "orders", refundedOrder); return { invoice: refunded, credit, order: refundedOrder }; },
+  refundInvoice(id: string) { const invoice = entityGet("invoices", id); if (!invoice) throw new Error("Invoice not found"); if (invoice.status === "refunded") return { invoice, credit: invoice.creditNoteId ? entityGet("creditNotes", invoice.creditNoteId) : undefined, order: entityGet("orders", invoice.orderId) }; const order = entityGet("orders", invoice.orderId); if (!order) throw new Error("Order not found"); if (order.status !== "Cancelled") throw new Error("Only a cancelled order can be refunded."); const refundedAt = new Date().toISOString(); const credit: CreditNote = { id: `credit-${crypto.randomUUID()}`, number: `CN-GM-2026-${String(entityList("creditNotes").length + 1).padStart(4, "0")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalUsd, reason: "Refunded by demo administrator", createdAt: refundedAt, baseCurrency: "USD" }; const refunded: Invoice = { ...invoice, status: "refunded", stampDate: refundedAt, creditNoteId: credit.id }; const refundedOrder: Order = { ...order, status: "Cancelled", paymentStatus: "Refunded", timeline: [...order.timeline, { stage: "Refunded", at: refundedAt }] }; put(database(), "creditNotes", credit); put(database(), "invoices", refunded); put(database(), "orders", refundedOrder); return { invoice: refunded, credit, order: refundedOrder }; },
   resolveRedirect(source: string) { const rule = entityList("redirects").find(item => item.active && item.from === source); if (!rule) return undefined; const changed = { ...rule, hits: rule.hits + 1 }; put(database(), "redirects", changed); return changed; },
-  resetDemoData() { const db = database(); db.exec("DELETE FROM entity_store; DELETE FROM meta_store;"); seed(db); synchronizeAllProductReviewSummaries(); }
+  resetDemoData() { const db = database(); db.exec("DELETE FROM entity_store; DELETE FROM meta_store;"); seed(db); migrateStoredCurrencyToUsd(db); migrateProductJewelryTypes(db); synchronizeAllProductReviewSummaries(); }
 };
 
 export type StorefrontProduct = {
+  jewelryType: AdminProduct["jewelryType"];
   slug: string; name: string; collection: "Aaria" | "Kavya" | "Mira"; category: "engagement" | "wedding" | "fine-jewelry";
   setting: string; shape: string; carat: string; clarity: string; color: string;
   metal: "Platinum" | "18ct Yellow Gold" | "18ct Rose Gold" | "18ct White Gold";
@@ -418,6 +470,7 @@ export function toStorefrontProduct(product: AdminProduct): StorefrontProduct {
     name: product.name,
     collection,
     category,
+    jewelryType: product.jewelryType,
     setting: product.setting,
     shape: product.shape,
     carat: product.carat,

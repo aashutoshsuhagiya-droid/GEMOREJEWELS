@@ -40,3 +40,7 @@ yarn-error.log*
 /data/*.db-wal
 /data/*.db-shm
 
+
+# Keep OneDrive from reparse-pointing build caches
+.next
+.next-dev

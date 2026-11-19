@@ -4,7 +4,7 @@ type ProductSchemaInput = {
   name: string;
   description: string;
   image: string;
-  audPrice: number;
+  usdPrice: number;
   rating: number;
   reviewCount: number;
   stock?: number;

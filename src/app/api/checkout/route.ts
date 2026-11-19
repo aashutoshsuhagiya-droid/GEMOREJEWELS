@@ -4,7 +4,7 @@ import { decodeStorefrontAccess, encodeStorefrontAccess, storefrontAccessCookie 
 
 type CheckoutBody = {
   customer?: { name?: string; email?: string; address?: string };
-  items?: Array<{ slug?: string; quantity?: number; audPrice?: number; metal?: string; carat?: string; setting?: string }>;
+  items?: Array<{ slug?: string; quantity?: number; usdPrice?: number; metal?: string; carat?: string; setting?: string }>;
   discountCode?: string;
 };
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = adminRepository.createStorefrontOrder({
       customer: { name: customer.name ?? "", email: customer.email, address: customer.address ?? "" },
-      items: items.map(item => ({ slug: item.slug!, quantity: item.quantity ?? 1, audPrice: item.audPrice, metal: item.metal, carat: item.carat, setting: item.setting })),
+      items: items.map(item => ({ slug: item.slug!, quantity: item.quantity ?? 1, usdPrice: item.usdPrice, metal: item.metal, carat: item.carat, setting: item.setting })),
       discountCode: body.discountCode
     });
     const existing = decodeStorefrontAccess(request.cookies.get(storefrontAccessCookie)?.value)?.orderIds ?? [];

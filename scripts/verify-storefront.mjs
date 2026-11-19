@@ -3,7 +3,7 @@ import postcss from "postcss";
 
 const origin = "http://localhost:3000";
 const decode = value => value.replaceAll("&amp;", "&").replaceAll("&#x27;", "'").replaceAll("&quot;", '"');
-const documentOnly = html => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
+const documentOnly = html => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "").replace(/<!--[\s\S]*?-->/g, "");
 let requests = 0;
 
 async function get(path, expected = 200) {
@@ -16,6 +16,85 @@ async function get(path, expected = 200) {
 const home = documentOnly(await (await get("/")).text());
 const catalog = await (await get("/api/catalog")).json();
 assert.ok(catalog.length > 0, "catalogue must contain active pieces");
+
+const navigation = [
+  ["Sale", "/collections/sale"],
+  ["Ready-to-Ship", "/collections/ready-to-ship"],
+  ["Engagement Rings", "/collections/engagement"],
+  ["Wedding Rings", "/collections/wedding"],
+  ["Jewelry", "/collections/fine-jewelry"],
+  ["Loose Stones", "/collections/loose-stones"],
+  ["Gifts", "/collections/gifts"],
+];
+const desktopNav = home.match(/<div class="desktop-nav desktop-only">([\s\S]*?)<\/div>/)?.[1];
+assert.ok(desktopNav, "desktop navigation must render");
+assert.deepEqual([...desktopNav.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map(([, href, label]) => [label, href]), navigation);
+assert.deepEqual([...desktopNav.matchAll(/<a\b[^>]*class="nav-button"[^>]*>([^<]+)<\/a>/g)].map(([, label]) => label), ["Engagement Rings", "Wedding Rings", "Jewelry"]);
+const mobileMenu = home.match(/<aside\b[^>]*class="mobile-menu[^"]*"[^>]*>([\s\S]*?)<\/aside>/)?.[1];
+assert.ok(mobileMenu, "mobile navigation must render");
+assert.deepEqual([...mobileMenu.matchAll(/<summary>([^<]+)<\/summary>/g)].map(([, label]) => label), [...navigation.map(([label]) => label), "Client care"]);
+for (const [label, href] of navigation) assert.ok(mobileMenu.includes(`href="${href}">Shop ${label}</a>`));
+assert.match(mobileMenu, /href="\/faq">FAQs<\/a>/);
+assert.match(mobileMenu, /href="\/showroom">Showroom appointments<\/a>/);
+assert.doesNotMatch(mobileMenu, /Explore the guide/);
+const footer = home.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)?.[1];
+assert.match(footer, /href="\/faq"/);
+assert.match(footer, /href="\/showroom"/);
+
+const cardSlugs = html => [...html.matchAll(/<article class="product-card[^>]*>[\s\S]*?<\/article>/g)]
+  .map(([card]) => card.match(/href="\/products\/([^?"/]+)/)[1]);
+const categories = [["Engagement Rings", "engagement"], ["Wedding Rings", "wedding"], ["Earrings", "earrings"], ["Bracelets", "bracelets"], ["Necklaces", "necklaces"]];
+const categoryCards = [...home.matchAll(/<a\b[^>]*class="style-card"[^>]*>[\s\S]*?<\/a>/g)].map(([card]) => card);
+assert.match(home, /<h2>Shop by Category<\/h2>/);
+assert.equal(categoryCards.length, 5);
+const categoryPhotos = new Set();
+for (const [index, [label, slug]] of categories.entries()) {
+  const card = categoryCards[index];
+  assert.ok(card.includes(`href="/collections/${slug}"`));
+  assert.ok(card.includes(`<h3>${label}</h3>`));
+  const image = card.match(/<img\b[^>]*>/)?.[0];
+  assert.match(image, /width="700"/);
+  assert.match(image, /height="700"/);
+  const src = decode(image.match(/src="([^"]+)"/)[1]);
+  const photo = new URL(src, origin).searchParams.get("url") ?? src;
+  categoryPhotos.add(new URL(photo).pathname);
+}
+assert.equal(categoryPhotos.size, 5, "each category needs a distinct existing photo");
+for (const [slug, type, title] of [["earrings", "earring", "Earrings"], ["bracelets", "bracelet", "Bracelets"], ["necklaces", "necklace", "Necklaces"]]) {
+  const page = documentOnly(await (await get(`/collections/${slug}`)).text());
+  const expected = catalog.filter(product => product.jewelryType === type);
+  assert.ok(page.includes(`<h1>${title}</h1>`));
+  assert.deepEqual(cardSlugs(page), expected.slice(0, 8).map(product => product.slug), `${title} must only show its saved jewelry type`);
+  if (!expected.length) {
+    assert.match(page, /Nothing here yet/);
+    assert.match(page, /href="\/showroom">Book a consultation<\/a>/);
+  } else {
+    assert.ok(page.includes(`role="status">${expected.length} pieces</p>`));
+  }
+}
+for (const [slug, title, expected] of [
+  ["sale", "Sale", [...catalog].sort((a, b) => a.usdPrice - b.usdPrice)],
+  ["gifts", "Gifts", catalog.filter(product => product.category === "fine-jewelry")],
+]) {
+  const page = documentOnly(await (await get(`/collections/${slug}`)).text());
+  assert.ok(page.includes(`<h1>${title}</h1>`));
+  assert.deepEqual(cardSlugs(page), expected.slice(0, 8).map(product => product.slug), `${title} must render the correct products in order`);
+  const count = page.match(/<p class="product-spec" role="status">([\s\S]*?)<\/p>/)?.[1].replace(/<!--.*?-->/g, "");
+  assert.equal(count, `${expected.length} pieces`, `${title} must include the full matching catalogue`);
+  if (slug === "sale") assert.match(page, /<option value="low" selected="">Price: low to high<\/option>/);
+}
+const looseStones = documentOnly(await (await get("/collections/loose-stones")).text());
+assert.match(looseStones, /<h1>Loose Stones<\/h1>/);
+assert.match(looseStones, /Certified &amp; ready to set/);
+assert.match(looseStones, /Loose lab-grown diamonds for bespoke settings\./);
+assert.match(looseStones, /Nothing here yet/);
+assert.ok(decode(looseStones).includes("Our loose stones atelier is opening soon. Book a consultation and we'll source your stone."));
+assert.match(looseStones, /href="\/showroom">Book a consultation<\/a>/);
+assert.deepEqual(cardSlugs(looseStones), []);
+assert.doesNotMatch(looseStones, /Clear filters|You have seen the full collection/);
+const sitemap = await (await get("/sitemap.xml")).text();
+for (const slug of ["sale", "loose-stones", "gifts", "earrings", "bracelets", "necklaces"]) assert.ok(sitemap.includes(`/collections/${slug}</loc>`));
+await get("/collections/no-such-collection", 404);
 
 // Check what localhost actually ships, including the CSS cascade and font files.
 const stylesheetPaths = [...home.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
@@ -30,6 +109,44 @@ function declaration(selector, property) {
     rule.walkDecls(property, entry => { value = entry.value; });
   });
   return value;
+}
+function responsiveDeclaration(selector, property, width) {
+  let value;
+  sheet.walkRules(rule => {
+    if (!rule.selectors.includes(selector)) return;
+    for (let parent = rule.parent; parent; parent = parent.parent) {
+      if (parent.type !== "atrule" || parent.name !== "media") continue;
+      if (!/^\s*\((min|max)-width/.test(parent.params)) return;
+      for (const [, bound, pixels] of parent.params.matchAll(/(min|max)-width:\s*(\d+)px/g)) {
+        if (bound === "min" ? width < Number(pixels) : width > Number(pixels)) return;
+      }
+    }
+    rule.walkDecls(property, entry => { value = entry.value; });
+  });
+  return value;
+}
+for (const [width, gap, spacing] of [[1024, "10px", .04], [1080, "10px", .04], [1280, "12px", .06], [1440, "22px", .08]]) {
+  assert.equal(responsiveDeclaration(".desktop-nav", "gap", width), gap, `navigation gap at ${width}px`);
+  assert.equal(parseFloat(responsiveDeclaration(".desktop-nav a", "letter-spacing", width)), spacing);
+  assert.equal(responsiveDeclaration(".desktop-nav", "flex-wrap", width), "nowrap");
+  assert.equal(responsiveDeclaration(".desktop-nav a", "white-space", width), "nowrap");
+  assert.notEqual(responsiveDeclaration(".desktop-only", "display", width), "none");
+}
+assert.equal(responsiveDeclaration(".desktop-only", "display", 1023), "none");
+assert.equal(responsiveDeclaration(".mobile-only", "display", 1023), "block");
+for (const width of [1440, 1280, 1024, 768, 375]) {
+  if (width > 1180) {
+    assert.match(responsiveDeclaration(".style-grid", "grid-template-columns", width), /repeat\(5,\s*minmax\(0,\s*1fr\)\)/);
+  } else {
+    assert.equal(responsiveDeclaration(".style-grid", "grid-template-columns", width), "none");
+    assert.equal(responsiveDeclaration(".style-grid", "grid-auto-flow", width), "column");
+    assert.equal(responsiveDeclaration(".style-grid", "grid-auto-columns", width), "220px");
+    assert.equal(responsiveDeclaration(".style-grid", "grid-template-rows", width), "auto");
+    assert.equal(responsiveDeclaration(".style-grid", "overflow-x", width), "auto");
+    assert.equal(responsiveDeclaration(".style-grid", "scroll-snap-type", width), "x mandatory");
+  }
+  assert.ok(["1", "1/1"].includes(responsiveDeclaration(".style-card-image", "aspect-ratio", width).replaceAll(" ", "")));
+  assert.equal(responsiveDeclaration(".style-card img", "object-fit", width), "cover");
 }
 assert.equal(declaration(":root", "--cullen-linen").toUpperCase(), "#FDFBF7");
 assert.equal(declaration(":root", "--cullen-forest").toUpperCase(), "#1B382B");
@@ -121,4 +238,4 @@ const admin = await fetch(`${origin}/admin`, { redirect: "manual", signal: Abort
 assert.ok([302, 303, 307, 308].includes(admin.status), "admin must still require sign-in");
 assert.match(admin.headers.get("location"), /\/login/);
 requests += 1;
-console.log(`PASS: ${requests} HTTP checks; Cullen CSS, typography, nine shape filters, four metal selections, storefront routes, and admin authentication.`);
+console.log(`PASS: ${requests} HTTP checks; seven-item navigation, new collection selection and empty state, sitemap, Cullen CSS, typography, nine shape filters, four metal selections, storefront routes, and admin authentication.`);

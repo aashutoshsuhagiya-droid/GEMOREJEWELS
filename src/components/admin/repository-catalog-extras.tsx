@@ -117,7 +117,7 @@ export function RepositoryCollectionsScreen() {
           <img src={collection.coverImage} alt={`${collection.name} collection cover`} className="aspect-[4/3] w-full object-cover"/>
           <div className="p-4">
             <div className="flex items-start justify-between gap-3"><div><span className="text-[10px] uppercase tracking-[.12em] text-[#737373]">⋮⋮ Homepage {index + 1}</span><h2 className="font-serif text-2xl text-[#253e2b]">{collection.name}</h2></div>{collection.homepage ? <span className="rounded-full bg-[#eaf5ee] px-2 py-1 text-[10px] text-[#236339]">Homepage</span> : null}</div>
-            <p className="mt-2 text-xs text-[#737373]">{collection.productIds.length} products · AUD ${collection.revenue30d.toLocaleString("en-AU")} in 30d</p>
+            <p className="mt-2 text-xs text-[#737373]">{collection.productIds.length} products · USD ${collection.revenue30d.toLocaleString("en-US")} in 30d</p>
             <p className="mt-2 truncate text-[11px] text-[#737373]">Mega tile: {collection.megaProductId ? names.get(collection.megaProductId) ?? "Selected product" : "None"}</p>
             <div className="mt-4 flex gap-2"><AdminButton tone="secondary" onClick={() => { setEditing({ ...collection, productIds: [...collection.productIds] }); setProductQuery(""); }} className="flex-1">Edit</AdminButton><AdminButton tone="quiet" disabled={index === 0} onClick={() => void reorder(collection.id, ordered[index - 1]?.id)} className="!px-2" >↑</AdminButton><AdminButton tone="quiet" disabled={index === ordered.length - 1} onClick={() => void reorder(collection.id, ordered[index + 1]?.id)} className="!px-2">↓</AdminButton></div>
           </div>

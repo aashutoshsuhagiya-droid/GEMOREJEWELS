@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { adminRepository } from "@/lib/admin-repository";
-type CartLine = { slug?: string; quantity?: number; audPrice?: number; metal?: string; carat?: string; setting?: string };
+type CartLine = { slug?: string; quantity?: number; usdPrice?: number; metal?: string; carat?: string; setting?: string };
 
 export async function POST(request: Request) {
   const { code, items = [] } = await request.json().catch(() => ({})) as { code?: string; items?: CartLine[] };
-  const selections = items.flatMap(item => item.slug ? [{ slug: item.slug, quantity: item.quantity ?? 1, audPrice: item.audPrice, metal: item.metal, carat: item.carat, setting: item.setting }] : []);
+  const selections = items.flatMap(item => item.slug ? [{ slug: item.slug, quantity: item.quantity ?? 1, usdPrice: item.usdPrice, metal: item.metal, carat: item.carat, setting: item.setting }] : []);
   try {
     return NextResponse.json(adminRepository.quoteStorefrontDiscount(code ?? "", selections));
   } catch (error) {

@@ -7,22 +7,23 @@ import { FilterSidebar } from "@/components/commerce/filter-sidebar";
 import { ShapeSelector } from "@/components/commerce/shape-selector";
 import type { DiamondShape } from "@/lib/product-options";
 
-export function CollectionClient({ products, initialFilter, initialShape }: { products: Product[]; initialFilter?: string; initialShape?: DiamondShape }) {
+export function CollectionClient({ products, initialFilter, initialShape, initialSort = "featured" }: { products: Product[]; initialFilter?: string; initialShape?: DiamondShape; initialSort?: "featured" | "low" }) {
   const [shape, setShape] = useState(initialShape);
   const [active, setActive] = useState<string[]>(initialFilter ? [initialFilter] : []);
-  const [sort, setSort] = useState("featured");
+  const [sort, setSort] = useState<string>(initialSort);
   const [shown, setShown] = useState(8);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
   const toggle = (filter: string) => setActive(current => current.includes(filter) ? current.filter(item => item !== filter) : [...current, filter]);
   const filtered = useMemo(() => {
     let result = products.filter(product => (!shape || product.shape === shape) && (active.length === 0 || active.some(filter => `${product.metal} ${product.carat} ${product.shape} ${product.setting} ${product.clarity}`.includes(filter.replace("Yellow Gold", "18ct Yellow Gold").replace("Rose Gold", "18ct Rose Gold").replace("White Gold", "18ct White Gold")))));
-    if (sort === "low") result = [...result].sort((a, b) => a.audPrice - b.audPrice);
-    if (sort === "high") result = [...result].sort((a, b) => b.audPrice - a.audPrice);
+    if (sort === "low") result = [...result].sort((a, b) => a.usdPrice - b.usdPrice);
+    if (sort === "high") result = [...result].sort((a, b) => b.usdPrice - a.usdPrice);
     if (sort === "rating") result = [...result].sort((a, b) => b.rating - a.rating);
     return result;
   }, [products, active, sort, shape]);
   useEffect(() => { setShape(initialShape); }, [initialShape]);
+  useEffect(() => { setSort(initialSort); }, [initialSort]);
   useEffect(() => { setShown(8); }, [active, sort, shape]);
   useEffect(() => { const node = sentinel.current; if (!node || shown >= filtered.length) return; const observer = new IntersectionObserver(entries => { if (entries[0].isIntersecting) setShown(current => Math.min(current + 8, filtered.length)); }, { rootMargin: "160px" }); observer.observe(node); return () => observer.disconnect(); }, [shown, filtered.length]);
   return <>

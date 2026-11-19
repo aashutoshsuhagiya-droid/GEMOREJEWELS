@@ -7,7 +7,10 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.resolve(__dirname),
   serverExternalPackages: ["better-sqlite3"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }]
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "cdn.builder.io" },
+    ]
   }
 };
 

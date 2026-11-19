@@ -250,11 +250,12 @@ h3 {
   color: var(--cullen-forest);
 }
 .logo-sub {
-  font-size: 8.5px;
+  font-size: 7.5px;
   font-weight: 500;
-  letter-spacing: 0.38em;
-  color: var(--cullen-charcoal);
-  margin-top: 4px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cullen-muted);
+  margin-top: 5px;
 }
 /* Cart Counter Badge */
 .cart-badge {
@@ -338,6 +339,122 @@ h3 {
 }
 .shape-card:hover svg {
   transform: scale(1.1);
+}
+/* Homepage shape showcase — clean white background, matches the Brilliant Earth reference */
+.shape-showcase {
+  align-items: center;
+  display: grid;
+  gap: 40px;
+  grid-template-columns: minmax(0, 1fr);
+}
+.shape-stage {
+  align-items: center;
+  background: var(--cullen-white);
+  border: 1px solid var(--cullen-border);
+  border-radius: 4px;
+  box-shadow: 0 10px 30px rgba(28, 25, 23, .06);
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  min-width: 0;
+  padding: 32px 28px 28px;
+}
+/* Large crossfading diamond area — white card, no dark background */
+.shape-stage-preview {
+  aspect-ratio: 1 / 1;
+  background: var(--cullen-white);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+  width: min(100%, 440px);
+}
+.shape-stage-diamond {
+  background: transparent;
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+.shape-stage-diamond.is-active { opacity: 1; }
+.shape-stage-caption {
+  color: var(--cullen-charcoal);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.shape-picker { min-width: 0; }
+.shape-picker-label {
+  color: var(--cullen-muted);
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  margin-bottom: 14px;
+}
+/* 3×3 thumbnail grid — clean white circles, no dark treatment, no zoom hacks */
+.shape-showcase .shape-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  min-width: 0;
+  overflow: visible;
+  padding: 4px;
+}
+.shape-showcase .shape-card {
+  background: transparent;
+  border-color: transparent;
+  gap: 10px;
+  padding: 12px 8px;
+}
+.shape-showcase .shape-card:hover,
+.shape-showcase .shape-card:focus-visible,
+.shape-showcase .shape-card[data-preview="true"] {
+  background: var(--cullen-white);
+  border-color: var(--cullen-forest);
+  box-shadow: 0 8px 20px rgba(28, 25, 23, .08);
+}
+.shape-thumbnail-wrap {
+  aspect-ratio: 1 / 1;
+  background: var(--cullen-white);
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(28, 25, 23, .1);
+  height: auto;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+.shape-thumbnail {
+  object-fit: contain;
+  object-position: center;
+  padding: 8%;
+  width: 100%;
+}
+.shape-check {
+  background: var(--cullen-forest);
+  border-radius: 50%;
+  color: var(--cullen-white);
+  display: grid;
+  height: 18px;
+  place-items: center;
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 18px;
+  font-size: 10px;
+}
+.shape-card-name {
+  color: var(--cullen-charcoal);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+@media (min-width: 768px) {
+  .shape-showcase { gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 /* Product Card & Smooth Image Crossfade */
 .product-card {

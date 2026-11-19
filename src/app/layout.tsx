@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import "./storefront.css";
 import { CartProvider } from "@/components/commerce/cart-store";
+import { CurrencyProvider } from "@/components/commerce/currency-store";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { metadataForPath } from "@/lib/seo";
@@ -38,6 +39,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const products = adminRepository.listProducts().filter(product => product.status === "active");
   const featureId = collectionRecords.find(collection => collection.megaProductId)?.megaProductId;
   const featureProduct = products.find(product => product.id === featureId) ?? products.find(product => product.featured);
-  const featured = featureProduct ? { slug: featureProduct.slug, name: featureProduct.name, image: featureProduct.images.find(image => image.isPrimary)?.src ?? featureProduct.images[0]?.src ?? "", priceAud: featureProduct.priceAud } : undefined;
-  return <html lang="en" className={`${editorial.variable} ${ui.variable}`}><body><CartProvider><Header collections={collections} featured={featured}/>{children}<Footer /></CartProvider></body></html>;
+  const featured = featureProduct ? { slug: featureProduct.slug, name: featureProduct.name, image: featureProduct.images.find(image => image.isPrimary)?.src ?? featureProduct.images[0]?.src ?? "", priceUsd: featureProduct.priceUsd } : undefined;
+  return <html lang="en" className={`${editorial.variable} ${ui.variable}`}><body><CurrencyProvider><CartProvider><Header collections={collections} featured={featured}/>{children}<Footer /></CartProvider></CurrencyProvider></body></html>;
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { diamondShapes, type DiamondShape } from "@/lib/product-options";
+import Image from "next/image";
+import { useState } from "react";
+import { diamondImages, diamondShapes, ringImages, type DiamondShape } from "@/lib/product-options";
 
 function ShapeIcon({ shape }: { shape: DiamondShape }) {
   const outlines: Partial<Record<DiamondShape, string>> = {
@@ -19,7 +21,27 @@ function ShapeIcon({ shape }: { shape: DiamondShape }) {
 }
 
 export function ShapeSelector({ selected, onSelect }: { selected?: DiamondShape; onSelect?: (shape: DiamondShape) => void }) {
-  return <div className="shape-grid" role={onSelect ? "group" : "navigation"} aria-label="Shop by diamond shape">
-    {diamondShapes.map(shape => onSelect ? <button type="button" className={`shape-card${selected === shape ? " active" : ""}`} aria-pressed={selected === shape} onClick={() => onSelect(shape)} key={shape}><ShapeIcon shape={shape}/><span>{shape}</span></button> : <Link className="shape-card" href={`/collections/engagement?shape=${shape}`} key={shape}><ShapeIcon shape={shape}/><span>{shape}</span></Link>)}
+  if (!onSelect) return <ShapeShowcase/>;
+
+  return <div className="shape-grid" role="group" aria-label="Shop by diamond shape">
+    {diamondShapes.map(shape => <button type="button" className={`shape-card${selected === shape ? " active" : ""}`} aria-pressed={selected === shape} onClick={() => onSelect(shape)} key={shape}><ShapeIcon shape={shape}/><span>{shape}</span></button>)}
+  </div>;
+}
+
+function ShapeShowcase() {
+  const [activeShape, setActiveShape] = useState<DiamondShape>("Round");
+
+  return <div className="shape-showcase" onMouseLeave={() => setActiveShape("Round")} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActiveShape("Round"); }}>
+    <div className="shape-stage">
+      <div className="shape-stage-preview" aria-hidden="true">{diamondShapes.map(shape => <Image key={shape} src={ringImages[shape]} alt="" fill sizes="(max-width: 767px) 60vw, 460px" loading="eager" className={`shape-stage-diamond${activeShape === shape ? " is-active" : ""}`}/>)}</div>
+      <p className="shape-stage-caption" aria-live="polite" aria-atomic="true">{activeShape} cut · {activeShape === "Round" ? "the classic brilliant" : "on your ring"}</p>
+    </div>
+    <div className="shape-picker">
+      <span className="shape-picker-label">Shape:</span>
+      <div className="shape-grid" role="navigation" aria-label="Shop by diamond shape">{diamondShapes.map(shape => <Link className="shape-card" href={`/collections/engagement?shape=${shape}`} key={shape} data-preview={activeShape === shape} onMouseEnter={() => setActiveShape(shape)} onFocus={() => setActiveShape(shape)}>
+        <span className="shape-thumbnail-wrap"><Image className="shape-thumbnail" src={diamondImages[shape]} alt={`${shape} cut diamond engagement ring`} width={100} height={100} sizes="(max-width: 767px) 90px, 100px"/>{activeShape === shape ? <span className="shape-check" aria-hidden="true">✓</span> : null}</span>
+        <span className="shape-card-name">{shape}</span>
+      </Link>)}</div>
+    </div>
   </div>;
 }

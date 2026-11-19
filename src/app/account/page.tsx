@@ -3,6 +3,7 @@ import { CraftTracker } from "@/components/commerce/craft-tracker";
 import { getAdminSession } from "@/lib/admin-auth";
 import { adminRepository } from "@/lib/admin-repository";
 import { getStorefrontOrderIds } from "@/lib/storefront-access";
+import { CurrencyAmount } from "@/components/commerce/currency-store";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <div>
                   <span className="label">{order.status}</span>
                   <h3>{order.code}</h3>
-                  <p>Placed {new Date(order.createdAt).toLocaleDateString("en-AU")} · AUD ${order.totalAud.toLocaleString()}</p>
+                  <p>Placed {new Date(order.createdAt).toLocaleDateString("en-US")} · <CurrencyAmount usd={order.totalUsd}/></p>
                 </div>
                 {invoice ? <Link className="button button-outline button-small" href={`/invoice/${encodeURIComponent(invoice.number)}`}>Invoice</Link> : null}
                 <div className="col-span-full mt-4"><CraftTracker current={order.craftStage}/></div>

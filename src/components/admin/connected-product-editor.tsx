@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ProductCard } from "@/components/commerce/product-card";
 import type { AdminProduct, Collection, ProductImage, SeoPage } from "@/shared/admin-types";
 import { siteUrl } from "@/shared/site-config";
+import { STATIC_USD_RATES } from "@/lib/currency";
+import { jewelryTypeOptions } from "@/lib/jewelry-type";
 
 const placeholder = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=85";
 const slugify = (text: string) => text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -84,7 +86,6 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(initial?.collectionIds.length ? initial.collectionIds : ["aaria"]);
   const [customCollectionName, setCustomCollectionName] = useState("");
   const [creatingCollection, setCreatingCollection] = useState(false);
-  const [priceAud, setPriceAud] = useState(String(initial?.priceAud ?? ""));
   const [priceUsd, setPriceUsd] = useState(String(initial?.priceUsd ?? ""));
   const [cost, setCost] = useState(String(initial?.cost ?? ""));
   const [stock, setStock] = useState(String(initial?.stock ?? 8));
@@ -94,6 +95,7 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
   const [description, setDescription] = useState(initial?.description ?? "");
   const [details, setDetails] = useState(initial?.details ?? "");
   const [setting, setSetting] = useState(initial?.setting ?? "Solitaire");
+  const [jewelryType, setJewelryType] = useState<AdminProduct["jewelryType"]>(initial?.jewelryType ?? "ring");
   const [shape, setShape] = useState(initial?.shape ?? "Oval");
   const [carat, setCarat] = useState(initial?.carat ?? "1.20ct");
   const [clarity, setClarity] = useState(initial?.clarity ?? "VVS2");
@@ -140,18 +142,19 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
 
   const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
   const primaryCollection = selectedCollectionIds[0] ?? "aaria";
-  const valid = Boolean(name.trim() && slug.trim() && Number(priceAud) > 0 && primaryImage?.src.trim() && selectedCollectionIds.length && metal.length);
+  const valid = Boolean(name.trim() && slug.trim() && Number(priceUsd) > 0 && primaryImage?.src.trim() && selectedCollectionIds.length && metal.length);
   const preview = useMemo(() => ({
     slug: slug || "preview",
     name: name || "Untitled product",
     collection: primaryCollection === "kavya" ? "Kavya" as const : primaryCollection === "mira" ? "Mira" as const : "Aaria" as const,
     category: "engagement" as const,
+    jewelryType,
     setting,
     shape,
     carat,
     clarity,
     metal: (metal[0] as "Platinum" | "18ct Yellow Gold" | "18ct Rose Gold" | "18ct White Gold") || "18ct Yellow Gold",
-    audPrice: Number(priceAud) || 0,
+    audPrice: Math.round((Number(priceUsd) || 0) * STATIC_USD_RATES.AUD),
     usdPrice: Number(priceUsd) || 0,
     rating: initial?.rating ?? 4.9,
     reviewCount: initial?.reviewCount ?? 0,
@@ -164,7 +167,7 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
     details,
     igeCertNo,
     color
-  }), [badges, carat, clarity, color, description, details, hoverImage, igeCertNo, images, initial, metal, name, priceAud, priceUsd, primaryCollection, primaryImage, setting, shape, slug]);
+  }), [badges, carat, clarity, color, description, details, hoverImage, igeCertNo, images, initial, jewelryType, metal, name, priceUsd, primaryCollection, primaryImage, setting, shape, slug]);
 
   function toggle(list: string[], value: string, set: (items: string[]) => void) {
     set(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
@@ -301,10 +304,11 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
         metal,
         shape,
         setting,
+        jewelryType,
         carat,
         clarity,
         color: color.trim(),
-        priceAud: Number(priceAud),
+        priceAud: Math.round(Number(priceUsd) * STATIC_USD_RATES.AUD),
         priceUsd: Number(priceUsd),
         cost: Number(cost) || 0,
         sku: initial?.sku ?? `GM-${primaryCollection.slice(0, 3).toUpperCase()}-${String(Date.now()).slice(-3)}`,
@@ -324,7 +328,8 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
         status,
         createdAt: initial?.createdAt ?? new Date().toISOString(),
         rating: initial?.rating ?? 0,
-        reviewCount: initial?.reviewCount ?? 0
+        reviewCount: initial?.reviewCount ?? 0,
+        baseCurrency: "USD"
       };
       await requestJson<AdminProduct>("/api/admin/products", {
         method: "POST",
@@ -394,7 +399,7 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
           <div className="p-4">
             <p className="text-[10px] uppercase tracking-[.12em] text-[#c9a962]">The {preview.collection} Collection</p>
             <h3 className="mt-1 text-xl">{preview.name}</h3>
-            <p className="mt-2 font-serif text-2xl">AUD ${preview.audPrice.toLocaleString()}</p>
+            <p className="mt-2 font-serif text-2xl">USD ${preview.usdPrice.toLocaleString("en-US")}</p>
             <p className="mt-2 text-sm text-[#737373]">{preview.description}</p>
           </div>
         </div>}
@@ -408,12 +413,12 @@ export function ConnectedProductEditor({ initial }: { initial?: AdminProduct }) 
             <label className="text-xs font-medium">Slug *<input value={slug} onChange={(event) => handleSlugChange(event.target.value)} className={fieldClass} /></label>
             <label className="text-xs font-medium">SKU<input value={initial?.sku ?? `GM-${primaryCollection.slice(0, 3).toUpperCase()}-AUTO`} readOnly className={`${fieldClass} bg-[#faf6ef]`} /></label>
             <label className="text-xs font-medium">Stock<input type="number" min="0" value={stock} onChange={(event) => setStock(event.target.value)} className={fieldClass} /></label>
-            <label className="text-xs font-medium">Price AUD *<input type="number" min="0" step="0.01" value={priceAud} onChange={(event) => { setPriceAud(event.target.value); setPriceUsd(String(Math.round(Number(event.target.value || 0) * .65))); }} className={fieldClass} /></label>
-            <label className="text-xs font-medium">Price USD<input type="number" min="0" step="0.01" value={priceUsd} onChange={(event) => setPriceUsd(event.target.value)} className={fieldClass} /></label>
-            <label className="text-xs font-medium">Cost<input type="number" min="0" step="0.01" value={cost} onChange={(event) => setCost(event.target.value)} className={fieldClass} /></label>
+            <label className="text-xs font-medium">Price USD *<input type="number" min="0" step="0.01" value={priceUsd} onChange={(event) => setPriceUsd(event.target.value)} className={fieldClass} /></label>
+            <label className="text-xs font-medium">Cost USD<input type="number" min="0" step="0.01" value={cost} onChange={(event) => setCost(event.target.value)} className={fieldClass} /></label>
             <label className="text-xs font-medium">Diamond colour<input value={color} onChange={(event) => setColor(event.target.value)} placeholder="E" className={fieldClass} /></label>
             <label className="text-xs font-medium">IGI certificate number<input value={igeCertNo} onChange={(event) => setIgeCertNo(event.target.value)} className={fieldClass} /></label>
             <label className="text-xs font-medium">Shape<input value={shape} onChange={(event) => setShape(event.target.value)} className={fieldClass} /></label>
+            <label className="text-xs font-medium">Jewelry type<select value={jewelryType} onChange={(event) => setJewelryType(event.target.value as AdminProduct["jewelryType"])} className={fieldClass}>{jewelryTypeOptions.map(option => <option value={option.value} key={option.value}>{option.label}</option>)}</select></label>
             <label className="text-xs font-medium">Setting style<input value={setting} onChange={(event) => setSetting(event.target.value)} className={fieldClass} /></label>
             <label className="text-xs font-medium">Carat<input value={carat} onChange={(event) => setCarat(event.target.value)} className={fieldClass} /></label>
             <label className="text-xs font-medium">Clarity<input value={clarity} onChange={(event) => setClarity(event.target.value)} className={fieldClass} /></label>

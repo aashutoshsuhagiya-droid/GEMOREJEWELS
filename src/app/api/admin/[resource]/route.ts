@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import { adminRepository } from "@/lib/admin-repository";
+import { isJewelryType } from "@/lib/jewelry-type";
 import type { EntityName, RedirectRule } from "@/shared/admin-types";
 
 const entities = new Set<EntityName>([
@@ -42,9 +43,10 @@ function mutationError(resource: EntityName, value: Record<string, unknown>) {
   }
 
   if (resource === "products") {
+    if (value.jewelryType !== undefined && !isJewelryType(value.jewelryType)) return "Choose a valid jewelry type.";
     if (!Array.isArray(value.images) || !value.images.length) return "Products require at least one image.";
     if (!Array.isArray(value.collectionIds) || !value.collectionIds.length) return "Products require at least one collection.";
-    if (typeof value.priceAud !== "number" || value.priceAud <= 0) return "Products require a positive AUD price.";
+    if (typeof value.priceUsd !== "number" || value.priceUsd <= 0) return "Products require a positive USD price.";
   }
   if (resource === "discounts" && (typeof value.usageCap !== "number" || value.usageCap < 1)) return "Discount usage cap must be at least 1.";
   if (resource === "seoPages" && !String(value.slug).startsWith("/")) return "SEO page slugs must start with /.";

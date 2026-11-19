@@ -3,6 +3,7 @@ import { adminRepository } from "@/lib/admin-repository";
 import { getAdminSession } from "@/lib/admin-auth";
 import { getStorefrontOrderIds } from "@/lib/storefront-access";
 import { PrintInvoiceButton } from "@/components/commerce/print-invoice-button";
+import { CurrencyAmount } from "@/components/commerce/currency-store";
 
 export const dynamic = "force-dynamic";
 
@@ -38,14 +39,14 @@ export default async function StorefrontInvoice({ params }: { params: Promise<{ 
         </div>
         <table>
           <thead><tr><th>Description</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
-          <tbody>{invoice.lines.map(line => <tr key={`${line.desc}-${line.hsn}`}><td>{line.desc}</td><td>{line.hsn}</td><td>{line.qty}</td><td>AUD ${line.rate.toLocaleString()}</td><td>AUD ${line.amount.toLocaleString()}</td></tr>)}</tbody>
+          <tbody>{invoice.lines.map(line => <tr key={`${line.desc}-${line.hsn}`}><td>{line.desc}</td><td>{line.hsn}</td><td>{line.qty}</td><td><CurrencyAmount usd={line.rate}/></td><td><CurrencyAmount usd={line.amount}/></td></tr>)}</tbody>
         </table>
         <div className="invoice-totals">
-          <span>Subtotal</span><b>AUD ${invoice.subtotal.toLocaleString()}</b>
-          {invoice.discountAmount ? <><span>Discount{invoice.discountCode ? ` · ${invoice.discountCode}` : ""}</span><b>−AUD ${invoice.discountAmount.toLocaleString()}</b></> : null}
-          {splitGst ? <><span>CGST @{gstRate / 2}%</span><b>AUD ${invoice.cgst.toLocaleString()}</b><span>SGST @{gstRate / 2}%</span><b>AUD ${invoice.sgst.toLocaleString()}</b></> : <><span>GST @{gstRate}%</span><b>AUD ${(invoice.cgst + invoice.sgst).toLocaleString()}</b></>}
-          <span>Shipping</span><b>{invoice.shipping ? `AUD ${invoice.shipping.toLocaleString()}` : "Complimentary"}</b>
-          <strong>Grand total</strong><strong>AUD ${invoice.totalAud.toLocaleString()}<small>USD ${invoice.totalUsd.toLocaleString()}</small></strong>
+          <span>Subtotal</span><b><CurrencyAmount usd={invoice.subtotal}/></b>
+          {invoice.discountAmount ? <><span>Discount{invoice.discountCode ? ` · ${invoice.discountCode}` : ""}</span><b>−<CurrencyAmount usd={invoice.discountAmount}/></b></> : null}
+          {splitGst ? <><span>CGST @{gstRate / 2}%</span><b><CurrencyAmount usd={invoice.cgst}/></b><span>SGST @{gstRate / 2}%</span><b><CurrencyAmount usd={invoice.sgst}/></b></> : <><span>GST @{gstRate}%</span><b><CurrencyAmount usd={invoice.cgst + invoice.sgst}/></b></>}
+          <span>Shipping</span><b>{invoice.shipping ? <CurrencyAmount usd={invoice.shipping}/> : "Complimentary"}</b>
+          <strong>Grand total</strong><strong><CurrencyAmount usd={invoice.totalUsd}/></strong>
         </div>
         <div className={`invoice-stamp ${invoice.status}`}>{invoice.status === "paid" ? "PAID" : invoice.status.toUpperCase()}</div>
         <footer>{footer} Questions? hello@gemoirejewels.com</footer>

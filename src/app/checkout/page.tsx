@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CraftTracker } from "@/components/commerce/craft-tracker";
 import { useCart } from "@/components/commerce/cart-store";
+import { useCurrency } from "@/components/commerce/currency-store";
 
 type Receipt = { orderCode: string; paymentStatus: "Paid" | "Pending"; invoiceNumber?: string };
 type FormValues = { email: string; firstName: string; lastName: string; address: string; city: string; postcode: string };
@@ -19,6 +20,7 @@ const defaultSettings: CheckoutSettings = {
 
 export default function CheckoutPage() {
   const { items, subtotal, promotion, clear } = useCart();
+  const { formatMoney } = useCurrency();
   const checkoutSubtotal = Math.max(0, subtotal - (promotion?.amount ?? 0));
   const [settings, setSettings] = useState(defaultSettings);
   const [step, setStep] = useState(0);
@@ -98,8 +100,8 @@ export default function CheckoutPage() {
                 {settings.bankDetails.accountNumber ? <p className="promo-message">Manual payment: {settings.bankDetails.accountName} · {settings.bankDetails.bankName} · {settings.bankDetails.accountNumber} · {settings.bankDetails.bic}</p> : null}
               </div>
             )}
-            {promotion ? <p className="promo-message">{promotion.code} applied · AUD ${promotion.amount.toLocaleString("en-AU")} off{promotion.shippingFree ? " · free shipping" : ""}</p> : null}
-            <p className="checkout-total">Order subtotal: AUD ${checkoutSubtotal.toLocaleString("en-AU")}</p>
+            {promotion ? <p className="promo-message">{promotion.code} applied · {formatMoney(promotion.amount)} off{promotion.shippingFree ? " · free shipping" : ""}</p> : null}
+            <p className="checkout-total">Order subtotal: {formatMoney(checkoutSubtotal)}</p>
           </div>
         ) : null}
         {notice ? <p className="promo-message" role="alert">{notice}</p> : null}

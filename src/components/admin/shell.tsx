@@ -10,11 +10,10 @@ import { AdminTopbar } from "./topbar";
 import { AdminToastProvider, useAdminToast } from "./toast";
 import { useDialogFocus } from "./use-dialog-focus";
 
-export const formatAdminAud = (value: number) => `AUD $${Math.round(value).toLocaleString("en-AU")}`;
 export const formatAdminUsd = (value: number) => `USD $${Math.round(value).toLocaleString("en-US")}`;
-export const formatAdminDate = (value: string, options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) => new Intl.DateTimeFormat("en-AU", options).format(new Date(value));
+export const formatAdminDate = (value: string, options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) => new Intl.DateTimeFormat("en-US", options).format(new Date(value));
 
-const DEMO_CUSTOMERS: Customer[] = [
+const LEGACY_DEMO_CUSTOMERS: Customer[] = [
   { id: "cus-001", name: "Mia Thompson", email: "mia.thompson@example.com", tags: ["VIP", "Repeat"], totalSpent: 14320, orderCount: 4, notes: "Prefers a short delivery update by email.", address: "15 Darling Street, Balmain NSW 2041", createdAt: "2026-03-14", vasStatus: "Active" },
   { id: "cus-002", name: "Arjun Nair", email: "arjun.nair@example.com", tags: ["Proposal-Season"], totalSpent: 7990, orderCount: 2, notes: "Requested a discreet parcel note.", address: "24 Chapel Street, Melbourne VIC 3181", createdAt: "2026-06-18", vasStatus: "Active" },
   { id: "cus-003", name: "Elise Walker", email: "elise.walker@example.com", tags: ["Repeat"], totalSpent: 12110, orderCount: 3, notes: "", address: "8 Potts Point Road, Sydney NSW 2011", createdAt: "2026-02-05", vasStatus: "None" },
@@ -24,8 +23,9 @@ const DEMO_CUSTOMERS: Customer[] = [
   { id: "cus-007", name: "Charlotte Lee", email: "charlotte.lee@example.com", tags: ["Proposal-Season"], totalSpent: 9820, orderCount: 2, notes: "Awaiting a resize consultation.", address: "5 Wattle Grove, Perth WA 6000", createdAt: "2026-08-11", vasStatus: "Active" },
   { id: "cus-008", name: "James Patel", email: "james.patel@example.com", tags: ["Repeat"], totalSpent: 7180, orderCount: 2, notes: "", address: "38 George Street, Adelaide SA 5000", createdAt: "2026-05-03", vasStatus: "None" }
 ];
+const DEMO_CUSTOMERS: Customer[] = LEGACY_DEMO_CUSTOMERS.map((customer) => ({ ...customer, totalSpent: Math.round(customer.totalSpent * .65), baseCurrency: "USD" }));
 
-const DEMO_ORDERS: Order[] = [
+const LEGACY_DEMO_ORDERS: Order[] = [
   { id: "ord-0001", code: "GM-2026-0001", customerId: "cus-001", items: [{ productId: "aaria-classic-solitaire", variant: "1.20ct · 18ct Yellow Gold", qty: 1, lineTotal: 3490, hsnCode: "711319" }], subtotal: 3490, gstRate: 18, gstAmount: 628, shipping: 0, totalAud: 4118, totalUsd: 2677, status: "Processing", paymentStatus: "Paid", paymentMethod: "Visa · 4242", createdAt: "2026-11-05T09:20:00.000Z", timeline: [{ stage: "Order created", at: "2026-11-05T09:20:00.000Z" }, { stage: "Payment confirmed", at: "2026-11-05T09:22:00.000Z" }, { stage: "Crafting started", at: "2026-11-05T12:00:00.000Z" }], craftStage: 1, notes: "Gift note: Always, M." },
   { id: "ord-0002", code: "GM-2026-0002", customerId: "cus-002", items: [{ productId: "kavya-halo-bloom", variant: "1.30ct · 18ct White Gold", qty: 1, lineTotal: 4380, hsnCode: "711319" }], subtotal: 4380, gstRate: 18, gstAmount: 788, shipping: 0, totalAud: 5168, totalUsd: 3360, status: "Crafting", paymentStatus: "Paid", paymentMethod: "GPay", createdAt: "2026-11-03T14:40:00.000Z", timeline: [{ stage: "Order created", at: "2026-11-03T14:40:00.000Z" }, { stage: "Payment confirmed", at: "2026-11-03T14:42:00.000Z" }, { stage: "Crafting started", at: "2026-11-04T10:00:00.000Z" }], craftStage: 1 },
   { id: "ord-0003", code: "GM-2026-0003", customerId: "cus-003", items: [{ productId: "mira-three-stone", variant: "1.50ct · Platinum", qty: 1, lineTotal: 4820, hsnCode: "711319" }], subtotal: 4820, gstRate: 18, gstAmount: 868, shipping: 0, totalAud: 5688, totalUsd: 3697, status: "Shipped", paymentStatus: "Paid", paymentMethod: "Mastercard · 9044", createdAt: "2026-10-30T06:15:00.000Z", timeline: [{ stage: "Order created", at: "2026-10-30T06:15:00.000Z" }, { stage: "Payment confirmed", at: "2026-10-30T06:16:00.000Z" }, { stage: "Crafting started", at: "2026-10-31T09:00:00.000Z" }, { stage: "Shipped", at: "2026-11-04T15:10:00.000Z" }], craftStage: 3, trackingCode: "GEM-923841" },
@@ -36,6 +36,17 @@ const DEMO_ORDERS: Order[] = [
   { id: "ord-0008", code: "GM-2026-0008", customerId: "cus-008", items: [{ productId: "mira-diamond-hoops", variant: "0.75ct · 18ct Yellow Gold", qty: 1, lineTotal: 1980, hsnCode: "711319" }], subtotal: 1980, gstRate: 18, gstAmount: 356, shipping: 65, totalAud: 2401, totalUsd: 1561, status: "Delivered", paymentStatus: "Paid", paymentMethod: "Visa · 6007", createdAt: "2026-09-28T16:10:00.000Z", timeline: [{ stage: "Order created", at: "2026-09-28T16:10:00.000Z" }, { stage: "Payment confirmed", at: "2026-09-28T16:12:00.000Z" }, { stage: "Shipped", at: "2026-10-02T12:10:00.000Z" }, { stage: "Delivered", at: "2026-10-05T10:30:00.000Z" }], craftStage: 3 },
   { id: "ord-0009", code: "GM-2026-0009", customerId: "cus-001", items: [{ productId: "mira-soft-curve", variant: "0.60ct · 18ct Yellow Gold", qty: 1, lineTotal: 2430, hsnCode: "711319" }], subtotal: 2430, gstRate: 18, gstAmount: 437, shipping: 0, totalAud: 2867, totalUsd: 1864, status: "Delivered", paymentStatus: "Paid", paymentMethod: "Visa · 4242", createdAt: "2026-09-18T09:30:00.000Z", timeline: [{ stage: "Order created", at: "2026-09-18T09:30:00.000Z" }, { stage: "Payment confirmed", at: "2026-09-18T09:32:00.000Z" }, { stage: "Shipped", at: "2026-09-21T13:00:00.000Z" }, { stage: "Delivered", at: "2026-09-25T11:00:00.000Z" }], craftStage: 3 }
 ];
+const DEMO_ORDERS: Order[] = LEGACY_DEMO_ORDERS.map((order) => {
+  const factor = order.totalUsd / order.totalAud;
+  return {
+    ...order,
+    items: order.items.map((item) => ({ ...item, lineTotal: Math.round(item.lineTotal * factor) })),
+    subtotal: Math.round(order.subtotal * factor),
+    gstAmount: Math.round(order.gstAmount * factor),
+    shipping: Math.round(order.shipping * factor),
+    baseCurrency: "USD",
+  };
+});
 
 const invoiceForOrder = (order: Order): Invoice => ({
   id: `inv-${order.id.slice(-4)}`,
@@ -54,11 +65,12 @@ const invoiceForOrder = (order: Order): Invoice => ({
   status: order.paymentStatus === "Refunded" ? "refunded" : "paid",
   stampDate: order.paymentStatus === "Paid" || order.paymentStatus === "Refunded" ? order.createdAt : undefined,
   method: order.paymentMethod,
-  creditNoteId: order.paymentStatus === "Refunded" ? "cn-0006" : undefined
+  creditNoteId: order.paymentStatus === "Refunded" ? "cn-0006" : undefined,
+  baseCurrency: "USD",
 });
 
 const DEMO_INVOICES = DEMO_ORDERS.filter((order) => order.paymentStatus !== "Pending").map(invoiceForOrder);
-const DEMO_CREDIT_NOTES: CreditNote[] = [{ id: "cn-0006", number: "CN-GM-2026-0006", invoiceId: "inv-0006", orderId: "ord-0006", amount: 4118, reason: "Duplicate order", createdAt: "2026-10-19T08:50:00.000Z" }];
+const DEMO_CREDIT_NOTES: CreditNote[] = [{ id: "cn-0006", number: "CN-GM-2026-0006", invoiceId: "inv-0006", orderId: "ord-0006", amount: 2677, reason: "Duplicate order", createdAt: "2026-10-19T08:50:00.000Z", baseCurrency: "USD" }];
 
 function productLabel(id: string) {
   const labels: Record<string, string> = { "aaria-classic-solitaire": "Aaria Classic Solitaire", "kavya-halo-bloom": "Kavya Halo Bloom", "mira-three-stone": "Mira Three-Stone", "kavya-cushion-glow": "Kavya Cushion Glow", "aaria-east-west-oval": "Aaria East-West Oval", "mira-diamond-band": "Mira Diamond Band", "mira-oval-trilogy": "Mira Oval Trilogy", "mira-diamond-hoops": "Mira Diamond Hoops", "mira-soft-curve": "Mira Soft Curve" };
@@ -146,7 +158,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       if (!response.ok) { setOrders((current) => current.map((order) => order.id === id ? existing : order)); if (!alreadyCreated) setInvoices((current) => current.filter((item) => item.id !== invoice.id)); notify("Could not confirm payment with the shared data store.", "error"); return; }
       const saved = await response.json() as { order?: Order; invoice?: Invoice };
       if (saved.order) setOrders((current) => current.map((order) => order.id === id ? saved.order! : order));
-      if (saved.order && existing.paymentStatus !== "Paid") setCustomers((current) => current.map((customer) => customer.id === saved.order!.customerId ? { ...customer, totalSpent: customer.totalSpent + saved.order!.totalAud } : customer));
+      if (saved.order && existing.paymentStatus !== "Paid") setCustomers((current) => current.map((customer) => customer.id === saved.order!.customerId ? { ...customer, totalSpent: customer.totalSpent + saved.order!.totalUsd, baseCurrency: "USD" } : customer));
       if (saved.invoice) setInvoices((current) => [saved.invoice!, ...current.filter((item) => item.orderId !== id)]);
     }).catch(() => { setOrders((current) => current.map((order) => order.id === id ? existing : order)); if (!alreadyCreated) setInvoices((current) => current.filter((item) => item.id !== invoice.id)); notify("Could not confirm payment with the shared data store.", "error"); });
     return invoice;
@@ -169,7 +181,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const refundInvoice = (id: string) => {
     const invoice = invoices.find((item) => item.id === id);
     if (!invoice || invoice.status === "refunded") return undefined;
-    const creditNote: CreditNote = { id: `cn-${Date.now()}`, number: `CN-${invoice.number.replace("INV-", "")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalAud, reason: "Cancelled or returned order", createdAt: new Date().toISOString() };
+    const creditNote: CreditNote = { id: `cn-${Date.now()}`, number: `CN-${invoice.number.replace("INV-", "")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalUsd, reason: "Cancelled or returned order", createdAt: new Date().toISOString(), baseCurrency: "USD" };
     const refundedInvoice: Invoice = { ...invoice, status: "refunded" as InvoiceStatus, stampDate: creditNote.createdAt, creditNoteId: creditNote.id };
     setInvoices((current) => current.map((item) => item.id === id ? refundedInvoice : item));
     setCreditNotes((current) => [creditNote, ...current]);

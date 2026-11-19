@@ -5,11 +5,12 @@ export type InvoiceStatus = "paid" | "due" | "refunded" | "credit-note";
 export type ProductImage = { src: string; alt: string; isPrimary: boolean };
 
 export type AdminProduct = {
+  jewelryType: "ring" | "earring" | "bracelet" | "necklace" | "loose-stone";
   id: string; slug: string; name: string; collectionIds: string[]; metal: string[]; shape: string; setting: string;
   carat: string; clarity: string; color: string; priceAud: number; priceUsd: number; cost: number; sku: string;
   stock: number; igeCertNo: string; images: ProductImage[]; hoverImage?: string; badges: string[]; description: string;
   details?: string; seoTitle?: string; seoDescription?: string; ogImage?: string; jsonLdEnabled?: boolean;
-  readyToShip: boolean; featured: boolean; status: RecordStatus; createdAt: string; rating: number; reviewCount: number;
+  readyToShip: boolean; featured: boolean; status: RecordStatus; createdAt: string; rating: number; reviewCount: number; baseCurrency?: "USD";
 };
 export type OrderItem = { productId: string; variant: string; qty: number; lineTotal: number; hsnCode: string };
 export type OrderTimelineEntry = { stage: string; at: string };
@@ -17,15 +18,15 @@ export type Order = {
   id: string; code: string; customerId: string; items: OrderItem[]; subtotal: number; gstRate: number; gstAmount: number;
   shipping: number; totalAud: number; totalUsd: number; status: OrderStatus; paymentStatus: PaymentStatus; paymentMethod: string;
   createdAt: string; timeline: OrderTimelineEntry[]; craftStage: 0 | 1 | 2 | 3; trackingCode?: string; notes?: string;
-  discountCode?: string; discountAmount?: number;
+  discountCode?: string; discountAmount?: number; baseCurrency?: "USD";
 };
-export type Customer = { id: string; name: string; email: string; tags: string[]; totalSpent: number; orderCount: number; notes: string; address: string; createdAt: string; vasStatus: "Active" | "None" };
+export type Customer = { id: string; name: string; email: string; tags: string[]; totalSpent: number; orderCount: number; notes: string; address: string; createdAt: string; vasStatus: "Active" | "None"; baseCurrency?: "USD" };
 export type InvoiceLine = { desc: string; hsn: string; qty: number; rate: number; amount: number };
 export type InvoiceBillingSnapshot = { storeName: string; gstin: string; cin: string; gstRate: number; splitGst: boolean; footer: string; bankDetails: { accountName: string; bankName: string; accountNumber: string; bic: string } };
-export type Invoice = { id: string; number: string; orderId: string; customerId: string; issuedAt: string; dueAt: string; lines: InvoiceLine[]; subtotal: number; cgst: number; sgst: number; shipping: number; totalAud: number; totalUsd: number; status: InvoiceStatus; stampDate?: string; creditNoteId?: string; method?: string; discountCode?: string; discountAmount?: number; billingSnapshot?: InvoiceBillingSnapshot };
-export type CreditNote = { id: string; number: string; invoiceId: string; orderId: string; amount: number; reason: string; createdAt: string };
-export type Collection = { id: string; name: string; slug: string; description: string; coverImage: string; productIds: string[]; homepage: boolean; homepageOrder: number; megaProductId?: string; revenue30d: number };
-export type Discount = { id: string; code: string; type: "percentage" | "fixed" | "shipping"; value: number; scope: "sitewide" | "category" | "product"; scopeId?: string; expiresAt: string; usageCount: number; usageCap: number; status: "active" | "scheduled" | "expired" };
+export type Invoice = { id: string; number: string; orderId: string; customerId: string; issuedAt: string; dueAt: string; lines: InvoiceLine[]; subtotal: number; cgst: number; sgst: number; shipping: number; totalAud: number; totalUsd: number; status: InvoiceStatus; stampDate?: string; creditNoteId?: string; method?: string; discountCode?: string; discountAmount?: number; billingSnapshot?: InvoiceBillingSnapshot; baseCurrency?: "USD" };
+export type CreditNote = { id: string; number: string; invoiceId: string; orderId: string; amount: number; reason: string; createdAt: string; baseCurrency?: "USD" };
+export type Collection = { id: string; name: string; slug: string; description: string; coverImage: string; productIds: string[]; homepage: boolean; homepageOrder: number; megaProductId?: string; revenue30d: number; baseCurrency?: "USD" };
+export type Discount = { id: string; code: string; type: "percentage" | "fixed" | "shipping"; value: number; scope: "sitewide" | "category" | "product"; scopeId?: string; expiresAt: string; usageCount: number; usageCap: number; status: "active" | "scheduled" | "expired"; baseCurrency?: "USD" };
 export type Subscriber = { id: string; email: string; addedAt: string; source: string; unsubscribed: boolean };
 export type InstagramItem = { id: string; src: string; productId?: string; position: number; underReview: boolean };
 export type SeoPage = { id: string; pageType: "home" | "collection" | "product" | "faq" | "showroom" | "404" | "cart" | "checkout"; slug: string; title: string; description: string; canonical: string; ogImage: string; jsonLdType: "WebSite" | "Product" | "FAQPage" | "Event" | "Article"; status: "published" | "draft" };
@@ -45,6 +46,7 @@ export type StoreSettings = {
   id: "settings";
   storeName: string;
   currencyPair: string;
+  baseCurrency?: "USD";
   locale: string;
   timezone: string;
   freeShippingThreshold: number;

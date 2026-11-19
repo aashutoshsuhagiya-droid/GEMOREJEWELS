@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     name: product.name,
     description: richTextToPlainText(product.description),
     image: product.images.find(image => image.isPrimary)?.src || product.images[0]?.src || "",
-    audPrice: product.priceAud,
+    usdPrice: product.priceUsd,
     rating: product.rating,
     reviewCount: product.reviewCount,
     stock: product.stock,

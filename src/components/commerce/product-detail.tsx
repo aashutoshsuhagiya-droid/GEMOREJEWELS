@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Metal, Product, StorefrontProductImage } from "@/data/products";
-import { formatAud, formatUsd } from "@/data/products";
 import { sanitizeLimitedRichText } from "@/lib/safe-rich-text";
 import { useDialogFocus } from "@/components/admin/use-dialog-focus";
 import { useCart } from "./cart-store";
 import { CraftTracker } from "./craft-tracker";
 import { MetalSwatches } from "./metal-swatches";
 import { productPrice } from "@/lib/product-options";
+import { useCurrency } from "./currency-store";
 
 const needsUnoptimizedImage = (src: string) => src.startsWith("data:") || src.startsWith("blob:") || !src.startsWith("https://images.unsplash.com/");
 
@@ -20,6 +20,7 @@ function RichProductCopy({ value }: { value: string }) {
 
 export function ProductDetail({ product, initialMetal }: { product: Product; initialMetal?: Metal }) {
   const { addItem } = useCart();
+  const { formatMoney } = useCurrency();
   const [metal, setMetal] = useState<Metal>(initialMetal ?? product.metal);
   const [carat, setCarat] = useState(product.carat);
   const [setting, setSetting] = useState(product.setting);
@@ -58,13 +59,13 @@ export function ProductDetail({ product, initialMetal }: { product: Product; ini
       <section className="pdp-info">
         <p className="eyebrow">The {product.collection} Collection</p>
         <h1>{product.name}</h1>
-        <div className="pdp-price shimmer">from {formatAud(adjusted)}<span>{formatUsd(Math.round(adjusted * .65))}</span></div>
+        <div className="pdp-price shimmer">from {formatMoney(adjusted)}</div>
         <p className="pdp-rating"><span className="stars">★★★★★</span> {product.rating} out of 5 · <a href="#reviews">{product.reviewCount} reviews</a></p>
         <div className="spec-quick"><span>Metal<strong>{metal.replace("18ct ", "")}</strong></span><span>Carat<strong>{carat}</strong></span><span>Clarity<strong>{product.clarity}</strong></span><span>Colour<strong>{product.color || "E"}</strong></span><span>Shape<strong>{product.shape}</strong></span></div>
         <div className="variant-block"><span>Metal — <span aria-live="polite">{metal}</span></span><MetalSwatches value={metal} onChange={setMetal} label="Choose precious metal"/></div>
         <div className="variant-block"><span>Diamond</span><div className="variant-choices">{[...new Set([product.carat, "1.50ct", "2.00ct"])].map(option => <button type="button" className={`variant-choice ${carat === option ? "active" : ""}`} onClick={() => setCarat(option)} key={option}>{option} · {option === "2.00ct" ? "VVS1" : product.clarity}</button>)}</div></div>
         <div className="variant-block"><span>Setting</span><div className="variant-choices">{[product.setting, "Solitaire", "Bezel"].filter((item, index, all) => all.indexOf(item) === index).map(option => <button type="button" className={`variant-choice ${setting === option ? "active" : ""}`} onClick={() => setSetting(option)} key={option}>{option}</button>)}</div></div>
-        <div className="pdp-buttons"><button type="button" className="button" onClick={() => addItem({ ...product, audPrice: adjusted, usdPrice: Math.round(adjusted * .65), metal, carat, setting })}>Add to cart</button><button type="button" className={`heart-large ${saved ? "saved" : ""}`} aria-label={saved ? `Remove ${product.name} from saved items` : `Save ${product.name} for later`} aria-pressed={saved} onClick={() => setSaved((value) => !value)}>{saved ? "♥" : "♡"}</button></div>
+        <div className="pdp-buttons"><button type="button" className="button" onClick={() => addItem({ ...product, usdPrice: adjusted, metal, carat, setting })}>Add to cart</button><button type="button" className={`heart-large ${saved ? "saved" : ""}`} aria-label={saved ? `Remove ${product.name} from saved items` : `Save ${product.name} for later`} aria-pressed={saved} onClick={() => setSaved((value) => !value)}>{saved ? "♥" : "♡"}</button></div>
         <button type="button" className="ar-button" disabled={!ar.enabled} onClick={() => setArOpen(true)} aria-haspopup="dialog" aria-expanded={arOpen} aria-controls="pdp-ar-dialog">⌁ &nbsp; View on your hand <span style={{ float: "right" }}>{ar.enabled ? "AR try-on" : "Coming soon"}</span></button>
         <div className="delivery-estimator"><strong>Delivery estimator</strong><input className="postcode" value={postcode} onChange={event => setPostcode(event.target.value)} placeholder="Enter postcode"/><p>{postcode ? "Express: arrives Jan 12 · Standard: Jan 25" : "Enter a postcode for estimated delivery"}</p></div>
         <div className="detail-accordions">
