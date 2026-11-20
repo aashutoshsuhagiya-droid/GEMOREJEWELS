@@ -9,7 +9,7 @@ export type Product = {
   slug: string;
   name: string;
   collection: "Aaria" | "Kavya" | "Mira";
-  category: "engagement" | "wedding" | "fine-jewelry";
+  category: "engagement" | "wedding" | "fine-jewelry" | "loose-stones";
   setting: string;
   shape: string;
   carat: string;

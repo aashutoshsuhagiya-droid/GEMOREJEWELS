@@ -33,13 +33,17 @@ function ShapeShowcase() {
 
   return <div className="shape-showcase" onMouseLeave={() => setActiveShape("Round")} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActiveShape("Round"); }}>
     <div className="shape-stage">
-      <div className="shape-stage-preview" aria-hidden="true">{diamondShapes.map(shape => <Image key={shape} src={ringImages[shape]} alt="" fill sizes="(max-width: 767px) 60vw, 460px" loading="eager" className={`shape-stage-diamond${activeShape === shape ? " is-active" : ""}`}/>)}</div>
+      <div className="shape-stage-heading">
+        <p className="eyebrow">Find your silhouette</p>
+        <h2>Shop by diamond shape</h2>
+        <p className="shape-stage-lede">Discover the shape that feels like you.</p>
+      </div>
+      <div className="shape-stage-preview" aria-hidden="true">{diamondShapes.map(shape => <Image key={shape} src={ringImages[shape]} alt="" fill sizes="(max-width: 767px) 80vw, 340px" loading="eager" className={`shape-stage-diamond${activeShape === shape ? " is-active" : ""}`}/>)}</div>
       <p className="shape-stage-caption" aria-live="polite" aria-atomic="true">{activeShape} cut · {activeShape === "Round" ? "the classic brilliant" : "on your ring"}</p>
     </div>
     <div className="shape-picker">
-      <span className="shape-picker-label">Shape:</span>
       <div className="shape-grid" role="navigation" aria-label="Shop by diamond shape">{diamondShapes.map(shape => <Link className="shape-card" href={`/collections/engagement?shape=${shape}`} key={shape} data-preview={activeShape === shape} onMouseEnter={() => setActiveShape(shape)} onFocus={() => setActiveShape(shape)}>
-        <span className="shape-thumbnail-wrap"><Image className="shape-thumbnail" src={diamondImages[shape]} alt={`${shape} cut diamond engagement ring`} width={100} height={100} sizes="(max-width: 767px) 90px, 100px"/>{activeShape === shape ? <span className="shape-check" aria-hidden="true">✓</span> : null}</span>
+        <span className="shape-thumbnail-wrap"><Image className="shape-thumbnail" src={diamondImages[shape]} alt={`${shape} cut diamond engagement ring`} width={100} height={100} sizes="(max-width: 767px) 45vw, 96px"/>{activeShape === shape ? <span className="shape-check" aria-hidden="true">✓</span> : null}</span>
         <span className="shape-card-name">{shape}</span>
       </Link>)}</div>
     </div>

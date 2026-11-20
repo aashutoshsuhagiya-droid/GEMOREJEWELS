@@ -52,8 +52,9 @@ export function ValueStrip() {
   return (
     <section className="section value-strip-section">
       <div className="shell value-strip">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div className="value-item" key={item.label}>
+            {index > 0 ? <span className="value-divider" aria-hidden="true" /> : null}
             <Icon type={item.icon} />
             <span className="value-item-label">{item.label}</span>
             <span className="value-item-desc">{item.description}</span>

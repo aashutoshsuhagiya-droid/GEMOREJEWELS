@@ -57,16 +57,100 @@ function isoDaysAgo(days: number) { const date = new Date(); date.setDate(date.g
 function slugify(text: string) { return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
 function makeProducts(): AdminProduct[] {
   const designs = ["Aaria Classic Solitaire", "Aaria East-West Oval", "Aaria Bezel Light", "Aaria Pear Poise", "Aaria Emerald Line", "Aaria Marquise Arc", "Aaria Cushion Frame", "Aaria Radiant Still", "Kavya Halo Bloom", "Kavya Round Halo", "Kavya Pear Halo", "Kavya Cushion Glow", "Kavya Emerald Halo", "Kavya Radiant Bloom", "Kavya Secret Halo", "Kavya Toi Et Moi", "Mira Three-Stone", "Mira Oval Trilogy", "Mira Emerald Trio", "Mira Pear Trilogy", "Mira Diamond Band", "Mira Soft Curve", "Mira Diamond Hoops", "Mira Pendant Light", "Aaria Floating Marquise", "Aaria Oval Crest", "Kavya Starlight Halo", "Kavya Double Halo", "Mira Open Band", "Mira Pavé Curve", "Aaria Cathedral Oval", "Aaria North Star", "Kavya Petal Halo", "Kavya Elongated Cushion", "Mira Petite Trilogy", "Mira Golden Hoop", "Aaria Compass Set", "Kavya Heart Halo", "Mira Brilliance Band", "Mira Diamond Drop"];
+  type LooseStoneSeed = { name: string; slug: string; carat: string; clarity: string; color: string; shape: string; setting: string; priceUsd: number; sku: string; igeCertNo: string; badges: AdminProduct["badges"] };
+  const looseStones: AdminProduct[] = ([
+    { name: "1.00ct Round Lab-Grown Diamond (D/VS1)", slug: "lab-round-1-00ct-d-vs1", carat: "1.00ct", clarity: "VS1", color: "D", shape: "Round", setting: "Loose Stone", priceUsd: 1620, sku: "GM-LS-101", igeCertNo: "IGI-GL-40281", badges: ["New"] },
+    { name: "1.50ct Cushion Lab-Grown Diamond (E/VVS2)", slug: "lab-cushion-1-50ct-e-vvs2", carat: "1.50ct", clarity: "VVS2", color: "E", shape: "Cushion", setting: "Loose Stone", priceUsd: 2480, sku: "GM-LS-102", igeCertNo: "IGI-GL-40282", badges: [] },
+    { name: "2.00ct Oval Lab-Grown Diamond (F/VS1)", slug: "lab-oval-2-00ct-f-vs1", carat: "2.00ct", clarity: "VS1", color: "F", shape: "Oval", setting: "Loose Stone", priceUsd: 3350, sku: "GM-LS-103", igeCertNo: "IGI-GL-40283", badges: ["Bestseller"] },
+    { name: "1.25ct Asscher Lab-Grown Diamond (E/VVS1)", slug: "lab-asscher-1-25ct-e-vvs1", carat: "1.25ct", clarity: "VVS1", color: "E", shape: "Asscher", setting: "Loose Stone", priceUsd: 2140, sku: "GM-LS-104", igeCertNo: "IGI-GL-40284", badges: [] },
+    { name: "1.75ct Pear Lab-Grown Diamond (D/VVS2)", slug: "lab-pear-1-75ct-d-vvs2", carat: "1.75ct", clarity: "VVS2", color: "D", shape: "Pear", setting: "Loose Stone", priceUsd: 2960, sku: "GM-LS-105", igeCertNo: "IGI-GL-40285", badges: ["New"] }
+  ] as LooseStoneSeed[]).map((stone, index) => ({
+    jewelryType: "loose-stone" as const,
+    id: `prod-ls-${index + 1}`,
+    collectionIds: [] as string[],
+    metal: ["Platinum"] as string[],
+    priceUsd: stone.priceUsd,
+    priceAud: Math.round(stone.priceUsd * STATIC_USD_RATES.AUD),
+    cost: Math.round(stone.priceUsd * .4),
+    stock: 12 + index * 2,
+    images: [{ src: imagePool[3], alt: `Certified loose lab-grown diamond — ${stone.name}`, isPrimary: true }, { src: imagePool[0], alt: `Loose diamond setting reference for ${stone.name}`, isPrimary: false }],
+    hoverImage: imagePool[0],
+    badges: stone.badges,
+    description: "An independent certified lab-grown diamond, ready to set into a Gemoire design of your choosing.",
+    details: "<h3>Certified loose stone</h3>Every loose diamond is independently certified and ready for a bespoke setting. <strong>Book a consultation</strong> to plan your piece.",
+    seoTitle: stone.name,
+    seoDescription: "Certified loose lab-grown diamond, ready to set.",
+    ogImage: imagePool[3],
+    jsonLdEnabled: true,
+    readyToShip: true,
+    featured: false,
+    status: "active" as const,
+    createdAt: isoDaysAgo(30 + index),
+    rating: Number((4.8 + (index % 2) * .1).toFixed(1)),
+    reviewCount: 6 + index * 3,
+    baseCurrency: "USD" as const,
+    name: stone.name,
+    slug: stone.slug,
+    carat: stone.carat,
+    clarity: stone.clarity,
+    color: stone.color,
+    shape: stone.shape,
+    setting: stone.setting,
+    sku: stone.sku,
+    igeCertNo: stone.igeCertNo
+  }));
+  type GiftSeed = { name: string; slug: string; jewelryType: AdminProduct["jewelryType"]; shape: string; setting: string; carat: string; clarity: string; color: string; priceUsd: number; sku: string; igeCertNo: string; badges: AdminProduct["badges"]; metal: string[] };
+  const giftProducts: AdminProduct[] = ([
+    { name: "18ct Gold Initials Charm", slug: "gold-initials-charm", jewelryType: "necklace", shape: "Round", setting: "Charm", carat: "0.05ct", clarity: "VVS2", color: "E", priceUsd: 85, sku: "GM-GF-201", igeCertNo: "IGI-GL-41201", badges: [], metal: ["18ct Yellow Gold"] },
+    { name: "Platinum Thin Wedding Band", slug: "platinum-thin-band", jewelryType: "ring", shape: "Round", setting: "Band", carat: "0.10ct", clarity: "VVS1", color: "D", priceUsd: 195, sku: "GM-GF-202", igeCertNo: "IGI-GL-41202", badges: [], metal: ["Platinum"] },
+    { name: "18ct Gold Signet Ring", slug: "gold-signet-ring", jewelryType: "ring", shape: "Cushion", setting: "Signet", carat: "0.20ct", clarity: "VS1", color: "E", priceUsd: 285, sku: "GM-GF-203", igeCertNo: "IGI-GL-41203", badges: ["New"], metal: ["18ct Yellow Gold"] },
+    { name: "Platinum Signet Ring", slug: "platinum-signet-ring", jewelryType: "ring", shape: "Cushion", setting: "Signet", carat: "0.20ct", clarity: "VS1", color: "D", priceUsd: 390, sku: "GM-GF-204", igeCertNo: "IGI-GL-41204", badges: [], metal: ["Platinum"] }
+  ] as GiftSeed[]).map((gift, index) => ({
+    jewelryType: gift.jewelryType,
+    id: `prod-gf-${index + 1}`,
+    slug: gift.slug,
+    name: gift.name,
+    collectionIds: [] as string[],
+    metal: gift.metal,
+    shape: gift.shape,
+    setting: gift.setting,
+    carat: gift.carat,
+    clarity: gift.clarity,
+    color: gift.color,
+    priceUsd: gift.priceUsd,
+    priceAud: Math.round(gift.priceUsd * STATIC_USD_RATES.AUD),
+    cost: Math.round(gift.priceUsd * .4),
+    sku: gift.sku,
+    stock: 20 + index * 4,
+    igeCertNo: gift.igeCertNo,
+    images: [{ src: imagePool[4], alt: `Placeholder product photography for ${gift.name}`, isPrimary: true }, { src: imagePool[3], alt: `Alt view for ${gift.name}`, isPrimary: false }],
+    hoverImage: imagePool[3],
+    badges: gift.badges,
+    description: "A thoughtful, individually made Gemoire piece — a considered gift for the people you keep.",
+    details: "<h3>A considered gift</h3>Hand-finished and presented with complimentary packaging and a lifetime care promise.",
+    seoTitle: gift.name,
+    seoDescription: "A thoughtful lab-grown diamond gift from Gemoire.",
+    ogImage: imagePool[4],
+    jsonLdEnabled: true,
+    readyToShip: true,
+    featured: false,
+    status: "active" as const,
+    createdAt: isoDaysAgo(20 + index),
+    rating: Number((4.7 + (index % 2) * .1).toFixed(1)),
+    reviewCount: 4 + index * 2,
+    baseCurrency: "USD" as const
+  }));
   const shapes = ["Round", "Oval", "Emerald", "Pear", "Cushion", "Marquise", "Radiant"];
   const settings = ["Solitaire", "Halo", "Bezel", "Three-Stone", "Toi et Moi", "East-West"];
-  return designs.map((name, index) => {
+  const ringProducts: AdminProduct[] = designs.map((name, index) => {
     const collection = name.startsWith("Aaria") ? "aaria" : name.startsWith("Kavya") ? "kavya" : "mira";
     const priceUsd = 1749 + index * 75;
     const priceAud = Math.round(priceUsd * STATIC_USD_RATES.AUD);
     const image = imagePool[index % imagePool.length];
     const description = "A considered balance of lab-grown diamond and precious metal, made for a lifetime of ordinary and extraordinary moments.";
-    return { jewelryType: inferJewelryType(name), id: `prod-${String(index + 1).padStart(3, "0")}`, slug: slugify(name), name, collectionIds: [collection], metal: index % 4 === 0 ? ["Platinum"] : index % 4 === 1 ? ["18ct Yellow Gold", "18ct White Gold"] : index % 4 === 2 ? ["18ct Rose Gold"] : ["18ct White Gold"], shape: shapes[index % shapes.length], setting: settings[index % settings.length], carat: `${(0.8 + (index % 8) * 0.15).toFixed(2)}ct`, clarity: index % 2 ? "VS1" : "VVS2", color: index % 3 ? "E" : "F", priceAud, priceUsd, cost: Math.round(priceUsd * .42), sku: `GM-${collection.slice(0, 3).toUpperCase()}-${String(index + 1).padStart(3, "0")}`, stock: (index * 3 + 2) % 17, igeCertNo: `IGI-GL-${39280 + index}`, images: [{ src: image, alt: `Placeholder product photography for ${name}`, isPrimary: true }, { src: imagePool[(index + 1) % imagePool.length], alt: `Hover placeholder for ${name}`, isPrimary: false }], hoverImage: imagePool[(index + 1) % imagePool.length], badges: index % 9 === 0 ? ["New"] : index % 7 === 0 ? ["Bestseller"] : [], description, details: "<h3>Made with intention</h3>Responsibly crafted in precious metal with a certified lab-grown diamond. <strong>Complimentary lifetime care</strong> is included.", seoTitle: name, seoDescription: description, ogImage: image, jsonLdEnabled: true, readyToShip: index % 5 === 0, featured: index < 6, status: index % 13 === 0 ? "draft" : "active", createdAt: isoDaysAgo(90 - index), rating: Number((4.6 + (index % 4) * .1).toFixed(1)), reviewCount: 18 + index * 7, baseCurrency: "USD" };
+    return { jewelryType: inferJewelryType(name), id: `prod-${String(index + 1).padStart(3, "0")}`, slug: slugify(name), name, collectionIds: [collection], metal: index % 4 === 0 ? ["Platinum"] : index % 4 === 1 ? ["18ct Yellow Gold", "18ct White Gold"] : index % 4 === 2 ? ["18ct Rose Gold"] : ["18ct White Gold"], shape: shapes[index % shapes.length], setting: settings[index % settings.length], carat: `${(0.8 + (index % 8) * 0.15).toFixed(2)}ct`, clarity: index % 2 ? "VS1" : "VVS2", color: index % 3 ? "E" : "F", priceAud, priceUsd, cost: Math.round(priceUsd * .42), sku: `GM-${collection.slice(0, 3).toUpperCase()}-${String(index + 1).padStart(3, "0")}`, stock: (index * 3 + 2) % 17, igeCertNo: `IGI-GL-${39280 + index}`, images: [{ src: image, alt: `Placeholder product photography for ${name}`, isPrimary: true }, { src: imagePool[(index + 1) % imagePool.length], alt: `Hover placeholder for ${name}`, isPrimary: false }], hoverImage: imagePool[(index + 1) % imagePool.length], badges: index % 9 === 0 ? ["New"] : index % 7 === 0 ? ["Bestseller"] : [], description, details: "<h3>Made with intention</h3>Responsibly crafted in precious metal with a certified lab-grown diamond. <strong>Complimentary lifetime care</strong> is included.", seoTitle: name, seoDescription: description, ogImage: image, jsonLdEnabled: true, readyToShip: index % 5 === 0, featured: index < 6, status: (index % 13 === 0 ? "draft" : "active") as AdminProduct["status"], createdAt: isoDaysAgo(90 - index), rating: Number((4.6 + (index % 4) * .1).toFixed(1)), reviewCount: 18 + index * 7, baseCurrency: "USD" };
   });
+  return ringProducts.concat(looseStones, ...giftProducts);
 }
 function makeCustomers(): Customer[] { return Array.from({ length: 80 }, (_, index) => { const first = firstNames[index % firstNames.length]; const last = lastNames[index % lastNames.length]; return { id: `cust-${String(index + 1).padStart(3, "0")}`, name: `${first} ${last}`, email: `${first.toLowerCase()}.${last.toLowerCase()}${index + 1}@example.com`, tags: index % 9 === 0 ? ["VIP"] : index % 4 === 0 ? ["Repeat"] : index % 7 === 0 ? ["Proposal-Season"] : [], totalSpent: 0, orderCount: 0, notes: index % 11 === 0 ? "Prefers a quiet, considered client-service experience." : "", address: `${10 + index} Collins Street, Melbourne VIC 3000`, createdAt: isoDaysAgo(120 - index), vasStatus: index % 5 === 0 ? "Active" : "None", baseCurrency: "USD" }; }); }
 function makeOrders(products: AdminProduct[], customers: Customer[]): Order[] { return Array.from({ length: 60 }, (_, index) => { const product = products[index % products.length]; const quantity = index % 11 === 0 ? 2 : 1; const subtotal = product.priceUsd * quantity; const gstAmount = Math.round(subtotal * .18); const shipping = subtotal > settingsSeed.freeShippingThreshold ? 0 : 16; const totalUsd = subtotal + gstAmount + shipping; const status: OrderStatus = index % 17 === 0 ? "Cancelled" : index % 8 === 0 ? "Delivered" : index % 5 === 0 ? "Shipped" : index % 3 === 0 ? "Crafting" : "Processing"; const paymentStatus: PaymentStatus = status === "Cancelled" ? "Refunded" : index % 6 === 0 ? "Pending" : "Paid"; const createdAt = isoDaysAgo(index + 1); return { id: `order-${String(index + 1).padStart(3, "0")}`, code: `GM-2026-${String(index + 1).padStart(4, "0")}`, customerId: customers[index % customers.length].id, items: [{ productId: product.id, variant: `${product.carat} · ${product.metal[0]}`, qty: quantity, lineTotal: subtotal, hsnCode: "7113" }], subtotal, gstRate: 18, gstAmount, shipping, totalAud: Math.round(totalUsd * STATIC_USD_RATES.AUD), totalUsd, status, paymentStatus, paymentMethod: index % 2 ? "Visa" : "G Pay", createdAt, timeline: [{ stage: "Order created", at: createdAt }, ...(paymentStatus === "Paid" ? [{ stage: "Payment received", at: isoDaysAgo(index) }] : []), ...(status !== "Processing" && status !== "Cancelled" ? [{ stage: "Crafting started", at: isoDaysAgo(Math.max(0, index - 1)) }] : []), ...(status === "Shipped" || status === "Delivered" ? [{ stage: "Shipped", at: isoDaysAgo(Math.max(0, index - 2)) }] : [])], craftStage: status === "Delivered" || status === "Shipped" ? 3 : status === "Crafting" ? 1 : 0, trackingCode: status === "Shipped" || status === "Delivered" ? `GMX${20260000 + index}` : undefined, notes: index % 10 === 0 ? "Please call before delivery." : "", baseCurrency: "USD" }; }); }
@@ -128,12 +212,56 @@ function migrateStoredCurrencyToUsd(db: Sqlite) {
 }
 function seed(db: Sqlite) {
   const seeded = db.prepare("SELECT json FROM meta_store WHERE key='seed-version'").get() as { json: string } | undefined;
-  if (seeded?.json === '"2026-11-admin-v1"') return;
+  if (seeded?.json === '"2026-11-admin-v5"') return;
   const products = makeProducts(); const customers = makeCustomers(); const orders = makeOrders(products, customers);
   orders.forEach(order => { const customer = customers.find(item => item.id === order.customerId)!; if (order.paymentStatus !== "Pending") customer.totalSpent += order.totalUsd; customer.orderCount += 1; });
   const collections: Collection[] = ["Aaria", "Kavya", "Mira"].map((name, index) => ({ id: name.toLowerCase(), name, slug: name.toLowerCase(), description: `${name} is a quietly considered GEMOIREJEWELSLLP collection.`, coverImage: imagePool[index], productIds: products.filter(product => product.collectionIds.includes(name.toLowerCase())).map(product => product.id), homepage: true, homepageOrder: index, megaProductId: products[index].id, revenue30d: 18655 + index * 5616, baseCurrency: "USD" as const })).concat([{ id: "ready-to-ship", name: "Ready-to-Ship", slug: "ready-to-ship", description: "Pieces ready to begin their next chapter this week.", coverImage: imagePool[3], productIds: products.filter(product => product.readyToShip).map(product => product.id), homepage: true, homepageOrder: 3, megaProductId: products[4].id, revenue30d: 13930, baseCurrency: "USD" as const }]);
   const faqs: Faq[] = ["How long will my ring take to craft?", "Do you ship worldwide?", "What is a lab-grown diamond?", "Which diamond shape is right for me?", "Is there a lifetime warranty?", "Do you offer moissanite?", "Where are your showrooms?", "Will my diamond come with certification?"].map((question, index) => ({ id: `faq-${index + 1}`, question, answer: index === 0 ? "Most made-to-order rings are crafted in four to six weeks. Ready-to-ship pieces leave our studio within ten business days." : "Our client care team will guide you through every detail with clear, considered advice.", position: index, published: true }));
-  const reviews: Review[] = Array.from({ length: 12 }, (_, index) => ({ id: `review-${index + 1}`, productId: products[index % products.length].id, customerName: customers[index].name, city: ["Melbourne", "Sydney", "Brisbane"][index % 3], rating: index % 5 === 0 ? 4 : 5, quote: "The whole experience felt unhurried, considered and beautifully personal.", status: "published", createdAt: isoDaysAgo(index + 3), reply: index % 3 === 0 ? "Thank you for trusting us with such a meaningful piece." : undefined }));
+  type ReviewPlatform = "Google" | "Trustpilot" | "Jagga" | "Facebook";
+  const platforms: ReviewPlatform[] = ["Google", "Trustpilot", "Jagga", "Facebook"];
+  const platformReviewBase: Record<ReviewPlatform, string> = {
+    Google: "https://www.google.com/maps/reviews/",
+    Trustpilot: "https://www.trustpilot.com/reviews/",
+    Jagga: "https://www.jagga.com/reviews/",
+    Facebook: "https://www.facebook.com/GEMOIREJEWELSLLP/reviews/"
+  };
+  const reviewQuotes = [
+    "The whole experience felt unhurried, considered and beautifully personal.",
+    "Absolutely stunning. The ring held more light than we expected and my partner loved every step of the process.",
+    "5 stars — the craftsmanship is genuinely top-notch and the documentation came with everything, as promised.",
+    "Visited the atelier and the team was outstanding. They answered every question with patience and clarity.",
+    "Simple, beautiful piece, constructed in a timely manner with constant notes keeping us informed.",
+    "I've definitely purchased more items from this store. The quality of the first one alone was more than enough to win me over.",
+    "Simply beautiful work, carried out with a quiet attention to detail that you can feel the moment you open the box.",
+    "Care, patience, and follow-through — that's the short version of our whole experience with this piece.",
+    "I've already sent my recommendation to three friends. It's the kind of service that's genuinely hard to find these days.",
+    "From the first message to the final delivery, every step felt considered. Exactly the kind of studio I'd choose again.",
+    "The certificate, the packaging, the follow-up notes — all thoughtful. This is the kind of care you expect from a brand of this standard.",
+    "A lifetime promise kept. The piece arrived beautifully made, exactly as described, with no surprises.",
+    "The team went above and beyond — every detail was handled with genuine care. Highly recommend.",
+    "I was nervous about buying online, but the live consultation and the certificate put my mind at ease.",
+    "Fast, insured shipping and the ring arrived in beautiful packaging. Exceeded every expectation.",
+    "This is my second purchase and the quality keeps getting better. A studio you can genuinely trust."
+  ];
+  const reviews: Review[] = Array.from({ length: 16 }, (_, index) => {
+    const platform = platforms[index % platforms.length] ?? "Google";
+    const product = products[index % products.length];
+    const primaryImage = product.images.find(item => item.isPrimary)?.src ?? imagePool[index % imagePool.length];
+    return {
+      id: `review-${index + 1}`,
+      productId: product.id,
+      customerName: customers[index].name,
+      city: ["Melbourne", "Sydney", "Brisbane"][index % 3],
+      rating: index % 5 === 0 ? 4 : 5,
+      quote: reviewQuotes[index],
+      status: "published",
+      createdAt: isoDaysAgo(index + 3),
+      reply: index % 3 === 0 ? "Thank you for trusting us with such a meaningful piece." : undefined,
+      platform,
+      externalUrl: `${platformReviewBase[platform]}gm-review-${index + 1}`,
+      productImage: primaryImage
+    };
+  });
   const discounts: Discount[] = [{ id: "disc-1", code: "GEMOIRE-10", type: "percentage", value: 10, scope: "sitewide", expiresAt: "2026-12-31", usageCount: 34, usageCap: 100, status: "active" }, { id: "disc-2", code: "SHIPWITHCARE", type: "shipping", value: 0, scope: "sitewide", expiresAt: "2027-01-31", usageCount: 18, usageCap: 50, status: "active" }];
   const subscribers: Subscriber[] = Array.from({ length: 60 }, (_, index) => ({ id: `sub-${index + 1}`, email: `considered.client${index + 1}@example.com`, addedAt: isoDaysAgo(index), source: index % 2 ? "Newsletter band" : "Checkout", unsubscribed: index % 17 === 0 }));
   const instagram: InstagramItem[] = Array.from({ length: 10 }, (_, index) => ({ id: `ig-${index + 1}`, src: imagePool[index % imagePool.length], productId: products[index].id, position: index, underReview: index % 4 === 0 }));
@@ -151,7 +279,7 @@ function seed(db: Sqlite) {
   ];
   seoPages.push(
     ...collections.map(collection => ({ id: `seo-collection-${collection.id}`, pageType: "collection" as const, slug: `/collections/${collection.slug}`, title: `${collection.name} collection`, description: collection.description, canonical: siteUrl(`/collections/${collection.slug}`), ogImage: collection.coverImage, jsonLdType: "WebSite" as const, status: "published" as const })),
-    ...[{ slug: "engagement", title: "Engagement Rings", description: "Lab-grown diamond rings that make the beginning feel entirely like you." }, { slug: "wedding", title: "Wedding Rings", description: "Considered bands and three-stone designs for the promise you make every day." }, { slug: "fine-jewelry", title: "Fine Jewellery", description: "Diamond details designed to become part of your own signature." }, { slug: "sale", title: "Sale", description: "Considered pieces, priced to be collected." }, { slug: "loose-stones", title: "Loose Stones", description: "Loose lab-grown diamonds for bespoke settings." }, { slug: "gifts", title: "Gifts", description: "Pieces chosen for the people you keep." }, { slug: "earrings", title: "Earrings", description: "Considered earrings from quiet studs to statement drops." }, { slug: "bracelets", title: "Bracelets", description: "Delicate bracelets designed to layer with everything." }, { slug: "necklaces", title: "Necklaces", description: "Pendants and chains that finish the way you start." }].map((page, index) => ({ id: `seo-plp-${page.slug}`, pageType: "collection" as const, slug: `/collections/${page.slug}`, title: page.title, description: page.description, canonical: siteUrl(`/collections/${page.slug}`), ogImage: imagePool[index % imagePool.length], jsonLdType: "WebSite" as const, status: "published" as const })),
+    ...[{ slug: "engagement", title: "Engagement Rings", description: "Lab-grown diamond rings that make the beginning feel entirely like you." }, { slug: "wedding", title: "Wedding Rings", description: "Considered bands and three-stone designs for the promise you make every day." }, { slug: "fine-jewelry", title: "Fine Jewellery", description: "Diamond details designed to become part of your own signature." }, { slug: "sale", title: "Sale", description: "Considered pieces, priced to be collected." }, { slug: "loose-stones", title: "Loose Stones", description: "Loose lab-grown diamonds for bespoke settings." }, { slug: "best-sellers", title: "Best Sellers", description: "The pieces our clients keep coming back for." }, { slug: "gift-for-her", title: "Gift for Her", description: "Necklaces, earrings and delicate pieces made to be kept." }, { slug: "gift-for-him", title: "Gift for Him", description: "Considered pieces for the people you keep." }, { slug: "under-100", title: "Gifts under $100", description: "Thoughtful pieces under $100." }, { slug: "under-200", title: "Gifts under $200", description: "Thoughtful pieces under $200." }, { slug: "under-300", title: "Gifts under $300", description: "Thoughtful pieces under $300." }, { slug: "gifts", title: "Gifts", description: "Pieces chosen for the people you keep." }, { slug: "earrings", title: "Earrings", description: "Considered earrings from quiet studs to statement drops." }, { slug: "bracelets", title: "Bracelets", description: "Delicate bracelets designed to layer with everything." }, { slug: "necklaces", title: "Necklaces", description: "Pendants and chains that finish the way you start." }].map((page, index) => ({ id: `seo-plp-${page.slug}`, pageType: "collection" as const, slug: `/collections/${page.slug}`, title: page.title, description: page.description, canonical: siteUrl(`/collections/${page.slug}`), ogImage: imagePool[index % imagePool.length], jsonLdType: "WebSite" as const, status: "published" as const })),
     { id: "seo-checkout", pageType: "checkout", slug: "/checkout", title: "Checkout", description: "Complete your considered GEMOIREJEWELSLLP order.", canonical: siteUrl("/checkout"), ogImage: imagePool[0], jsonLdType: "WebSite", status: "draft" },
     { id: "seo-404", pageType: "404", slug: "/404", title: "Lost your way?", description: "Find a considered place to begin with GEMOIREJEWELSLLP.", canonical: siteUrl("/404"), ogImage: imagePool[0], jsonLdType: "WebSite", status: "draft" }
   );
@@ -160,7 +288,7 @@ function seed(db: Sqlite) {
   const creditNotes: CreditNote[] = invoices.filter(invoice => invoice.status === "refunded").slice(0, 2).map((invoice, index) => ({ id: `credit-${index + 1}`, number: `CN-GM-2026-${String(index + 1).padStart(4, "0")}`, invoiceId: invoice.id, orderId: invoice.orderId, amount: invoice.totalUsd, reason: index === 0 ? "Cancelled before dispatch" : "Returned to studio", createdAt: isoDaysAgo(4 + index * 12), baseCurrency: "USD" }));
   creditNotes.forEach(credit => { const invoice = invoices.find(item => item.id === credit.invoiceId); if (invoice) invoice.creditNoteId = credit.id; });
   ([ ["products", products], ["customers", customers], ["orders", orders], ["invoices", invoices], ["creditNotes", creditNotes], ["collections", collections], ["faqs", faqs], ["reviews", reviews], ["discounts", discounts], ["subscribers", subscribers], ["instagram", instagram], ["blog", blog], ["bookings", bookings], ["craft", craft], ["quizQuestions", quizQuestions], ["quizOutcomes", quizOutcomes], ["seoPages", seoPages], ["redirects", redirects] ] as Array<[string, Array<{ id: string }>]>) .forEach(([kind, values]) => values.forEach(value => put(db, kind, value)));
-  putMeta(db, "settings", settingsSeed); putMeta(db, "seo-site", seoSiteSeed); putMeta(db, "seo-analytics", seoAnalyticsSeed); putMeta(db, "seed-version", "2026-11-admin-v1");
+  putMeta(db, "settings", settingsSeed); putMeta(db, "seo-site", seoSiteSeed); putMeta(db, "seo-analytics", seoAnalyticsSeed); putMeta(db, "seed-version", "2026-11-admin-v5");
 }
 
 function getMeta<T>(key: string): T { const row = database().prepare("SELECT json FROM meta_store WHERE key=?").get(key) as { json: string } | undefined; if (!row) throw new Error(`Missing admin meta ${key}`); return JSON.parse(row.json) as T; }
@@ -450,7 +578,7 @@ export const adminRepository = {
 
 export type StorefrontProduct = {
   jewelryType: AdminProduct["jewelryType"];
-  slug: string; name: string; collection: "Aaria" | "Kavya" | "Mira"; category: "engagement" | "wedding" | "fine-jewelry";
+  slug: string; name: string; collection: "Aaria" | "Kavya" | "Mira"; category: "engagement" | "wedding" | "fine-jewelry" | "loose-stones";
   setting: string; shape: string; carat: string; clarity: string; color: string;
   metal: "Platinum" | "18ct Yellow Gold" | "18ct Rose Gold" | "18ct White Gold";
   audPrice: number; usdPrice: number; rating: number; reviewCount: number; tag?: "New" | "Bestseller";
@@ -460,7 +588,7 @@ export type StorefrontProduct = {
 
 export function toStorefrontProduct(product: AdminProduct): StorefrontProduct {
   const collection = product.collectionIds[0] === "kavya" ? "Kavya" : product.collectionIds[0] === "mira" ? "Mira" : "Aaria";
-  const category = product.setting === "Three-Stone" || product.setting === "Eternity" ? "wedding" : product.name.includes("Hoop") || product.name.includes("Pendant") ? "fine-jewelry" : "engagement";
+  const category = product.jewelryType === "loose-stone" ? "loose-stones" : product.setting === "Three-Stone" || product.setting === "Eternity" ? "wedding" : product.name.includes("Hoop") || product.name.includes("Pendant") ? "fine-jewelry" : "engagement";
   const availableImages = product.images.filter(item => item.src.trim()).slice(0, 8);
   const selectedPrimary = availableImages.find(item => item.isPrimary) ?? availableImages[0] ?? { src: imagePool[0], alt: `Placeholder product photography for ${product.name}`, isPrimary: true };
   const images = [selectedPrimary, ...availableImages.filter(item => item !== selectedPrimary)].map((item, index) => ({ ...item, isPrimary: index === 0 }));

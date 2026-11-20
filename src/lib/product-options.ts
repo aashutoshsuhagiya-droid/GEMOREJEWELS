@@ -1,5 +1,26 @@
 import type { Metal, Product } from "@/data/products";
 
+export type ShowcaseShapeItem = {
+  id: string;
+  name: string;
+  canonicalShape: DiamondShape;
+  looseImage: string;
+  ringImage: string;
+};
+
+export const showcaseShapes: ShowcaseShapeItem[] = [
+  { id: "oval", name: "Oval", canonicalShape: "Oval", looseImage: "/images/diamonds/oval.png", ringImage: "/images/shapes/oval.png" },
+  { id: "round", name: "Round", canonicalShape: "Round", looseImage: "/images/diamonds/round.png", ringImage: "/images/shapes/round.png" },
+  { id: "emerald", name: "Emerald", canonicalShape: "Emerald", looseImage: "/images/diamonds/emerald.png", ringImage: "/images/shapes/emerald.png" },
+  { id: "marquise", name: "Marquise", canonicalShape: "Marquise", looseImage: "/images/diamonds/marquise.png", ringImage: "/images/shapes/marquise.png" },
+  { id: "radiant", name: "Radiant", canonicalShape: "Radiant", looseImage: "/images/diamonds/radiant.png", ringImage: "/images/shapes/radiant.png" },
+  { id: "pear", name: "Pear", canonicalShape: "Pear", looseImage: "/images/diamonds/pear.png", ringImage: "/images/shapes/pear.png" },
+  { id: "elongated-cushion", name: "Elongated Cushion", canonicalShape: "Cushion", looseImage: "/images/diamonds/elongated-cushion.png", ringImage: "/images/shapes/elongated-cushion.png" },
+  { id: "cushion", name: "Cushion", canonicalShape: "Cushion", looseImage: "/images/diamonds/cushion.png", ringImage: "/images/shapes/cushion.png" },
+  { id: "princess", name: "Princess", canonicalShape: "Princess", looseImage: "/images/diamonds/princess.png", ringImage: "/images/shapes/princess.png" },
+  { id: "asscher", name: "Asscher", canonicalShape: "Asscher", looseImage: "/images/diamonds/asscher.png", ringImage: "/images/shapes/asscher.png" },
+];
+
 export const metalOptions: ReadonlyArray<{ name: Metal; swatch: string }> = [
   { name: "18ct Yellow Gold", swatch: "swatch-yellow" },
   { name: "18ct Rose Gold", swatch: "swatch-rose" },
@@ -48,7 +69,11 @@ export function parseMetal(value: string | string[] | undefined): Metal | undefi
 
 export function parseShape(value: string | string[] | undefined): DiamondShape | undefined {
   const candidate = Array.isArray(value) ? value[0] : value;
-  return diamondShapes.find(shape => shape.toLowerCase() === candidate?.toLowerCase());
+  if (!candidate) return undefined;
+  if (candidate.toLowerCase() === "elongated cushion" || candidate.toLowerCase() === "elongated-cushion") {
+    return "Cushion";
+  }
+  return diamondShapes.find(shape => shape.toLowerCase() === candidate.toLowerCase());
 }
 
 // USD is canonical; adjustments preserve the approximate value of the former AUD configurator increments.

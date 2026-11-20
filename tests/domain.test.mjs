@@ -330,7 +330,7 @@ test("demo seed fulfils the catalogue and operational data contract", () => {
   assert.equal(designCount, 40, "expected 40 seeded products");
   assert.match(repository, /Array\.from\(\{ length: 80 \}/, "expected 80 customers");
   assert.match(repository, /Array\.from\(\{ length: 60 \}/, "expected 60 orders or subscribers");
-  assert.match(repository, /Array\.from\(\{ length: 12 \}/, "expected 12 reviews");
+  assert.match(repository, /Array\.from\(\{ length: 16 \}/, "expected 16 reviews");
   assert.match(repository, /const faqs: Faq\[\] = \[/, "expected FAQ seed");
   assert.match(repository, /const blog: BlogPost\[\] = \[/, "expected blog seed");
   assert.match(repository, /const bookings: Booking\[\] = \[/, "expected booking seed");
