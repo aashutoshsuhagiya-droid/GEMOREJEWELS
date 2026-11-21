@@ -78,8 +78,8 @@ export default function ContactPage() {
           ) : (
             <form className="contact-form" onSubmit={submit}>
               <h2>Send a message</h2>
-              <input required value={form.name} onChange={event => update("name", event.target.value)} placeholder="Your name" />
-              <input required type="email" value={form.email} onChange={event => update("email", event.target.value)} placeholder="Email address" />
+              <input required autoComplete="name" value={form.name} onChange={event => update("name", event.target.value)} placeholder="Your name" />
+              <input required type="email" inputMode="email" autoComplete="email" value={form.email} onChange={event => update("email", event.target.value)} placeholder="Email address" />
               <textarea required rows={4} value={form.message} onChange={event => update("message", event.target.value)} placeholder="How can we help?" />
               {notice ? <p className="promo-message" role="alert">{notice}</p> : null}
               <button className="button" disabled={saving}>{saving ? "Sending…" : "Send message"}</button>

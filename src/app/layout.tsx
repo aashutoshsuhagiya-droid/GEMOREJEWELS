@@ -40,5 +40,5 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const featureId = collectionRecords.find(collection => collection.megaProductId)?.megaProductId;
   const featureProduct = products.find(product => product.id === featureId) ?? products.find(product => product.featured);
   const featured = featureProduct ? { slug: featureProduct.slug, name: featureProduct.name, image: featureProduct.images.find(image => image.isPrimary)?.src ?? featureProduct.images[0]?.src ?? "", priceUsd: featureProduct.priceUsd } : undefined;
-  return <html lang="en" className={`${editorial.variable} ${ui.variable}`}><body><CurrencyProvider><CartProvider><Header collections={collections} featured={featured}/>{children}<Footer /></CartProvider></CurrencyProvider></body></html>;
+  return <html lang="en" className={`${editorial.variable} ${ui.variable}`}><body><a href="#top" className="skip-link">Skip to main content</a><CurrencyProvider><CartProvider><Header collections={collections} featured={featured}/>{children}<Footer /></CartProvider></CurrencyProvider></body></html>;
 }

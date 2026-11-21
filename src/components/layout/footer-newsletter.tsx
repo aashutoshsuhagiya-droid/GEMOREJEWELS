@@ -38,6 +38,8 @@ export function FooterNewsletter() {
       <input
         required
         type="email"
+        inputMode="email"
+        autoComplete="email"
         value={email}
         onChange={event => setEmail(event.target.value)}
         placeholder="Your Email"

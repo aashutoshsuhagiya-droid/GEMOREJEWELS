@@ -50,9 +50,10 @@ export function Footer() {
             </div>
             <p>Fine jewellery with a considered point of view, made for the moments you carry forward.</p>
             <div className="footer-socials">
-              {["IG", "TT", "FB", "YT", "P", "in"].map((s) => (
-                <a key={s} href="#top" aria-label={s} className="footer-social">{s}</a>
-              ))}
+              {["IG", "TT", "FB", "YT", "P", "in"].map((s, idx) => {
+                const labels = ["Instagram", "TikTok", "Facebook", "YouTube", "Pinterest", "LinkedIn"];
+                return <a key={s} href="#top" aria-label={labels[idx]} className="footer-social">{s}</a>;
+              })}
             </div>
           </div>
           {groups.map((group) => (

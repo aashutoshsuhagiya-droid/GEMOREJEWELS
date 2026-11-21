@@ -76,6 +76,7 @@ export function VideoGallery() {
   return (
     <section className="section video-gallery">
       <div className="shell">
+        <div className="video-scroll-hint" aria-hidden="true">Scroll to explore</div>
         <div className="video-viewport">
           <div className="video-carousel" ref={trackRef} onScroll={onScroll}>
             {galleryVideos.map(video => {
