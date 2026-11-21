@@ -3,10 +3,35 @@ import { CurrencyRatesIndicator, CurrencyRegionLabel } from "@/components/commer
 import { FooterNewsletter } from "@/components/layout/footer-newsletter";
 
 const groups = [
-  { title: "Shop", links: ["Engagement rings", "Wedding rings", "Fine jewellery", "Ready-to-ship"] },
-  { title: "About us", links: ["Our story", "Diamond origins", "Our ateliers", "Journal"] },
-  { title: "Client care", links: ["Shipping & returns", "Lifetime warranty", "Ring sizing", "FAQs"] },
-  { title: "Support", links: ["Contact us", "Book an appointment", "Privacy Policy", "Terms & Conditions"] },
+  { title: "Shop", links: [
+      { label: "Engagement rings", href: "/collections/engagement" },
+      { label: "Wedding rings", href: "/collections/wedding" },
+      { label: "Fine jewellery", href: "/collections/fine-jewellery" },
+      { label: "Ring styles", href: "/ring-styles" },
+      { label: "Ready-to-ship", href: "/collections/ready-to-ship" },
+    ]
+  },
+  { title: "About us", links: [
+      { label: "Our story", href: "/about" },
+      { label: "Diamond origins", href: "/about#origins" },
+      { label: "Our ateliers", href: "/about#ateliers" },
+      { label: "Journal", href: "/blog" },
+    ]
+  },
+  { title: "Client care", links: [
+      { label: "Shipping Policy", href: "/shipping-policy" },
+      { label: "Returns & exchanges", href: "/return-exchange-policy" },
+      { label: "Ring sizing", href: "/ring-sizing" },
+      { label: "FAQs", href: "/faq" },
+    ]
+  },
+  { title: "Policies", links: [
+      { label: "Payment Policy", href: "/payment-policy" },
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "Terms of Service", href: "/terms-of-service" },
+      { label: "Contact us", href: "/contact" },
+    ]
+  },
 ];
 
 export function Footer() {
@@ -35,26 +60,7 @@ export function Footer() {
               <h4>{group.title}</h4>
               <div className="footer-links">
                 {group.links.map((link) => (
-                  <Link
-                    key={link}
-                    href={
-                      link.includes("Our story")
-                        ? "/about"
-                        : link.includes("Journal")
-                          ? "/blog"
-                          : link.includes("FAQ")
-                            ? "/faq"
-                            : link.includes("appointment")
-                              ? "/showroom"
-                              : link.includes("Privacy")
-                                ? "/privacy"
-                                : link.includes("Terms")
-                                  ? "/terms"
-                                  : "/collections/engagement"
-                    }
-                  >
-                    {link}
-                  </Link>
+                  <Link key={link.label} href={link.href}>{link.label}</Link>
                 ))}
               </div>
             </div>
@@ -71,7 +77,7 @@ export function Footer() {
             <span>Secure checkout · SSL encrypted</span>
             <CurrencyRegionLabel />
             <CurrencyRatesIndicator />
-            <span>Privacy · Terms</span>
+            <span>Shipping · Returns · Payment · Privacy · Terms</span>
             <span>© 2026 GEMOIREJEWELSLLP</span>
           </div>
         </div>

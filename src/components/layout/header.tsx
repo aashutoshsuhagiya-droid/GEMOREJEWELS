@@ -9,8 +9,8 @@ import { useCart } from "@/components/commerce/cart-store";
 import { useCurrency } from "@/components/commerce/currency-store";
 import { CurrencySelector } from "./currency-selector";
 
-const nav = ["Sale", "Ready-to-Ship", "Engagement Rings", "Wedding Rings", "Jewelry", "Loose Stones", "Gifts"];
-const navHref: Record<string, string> = { Sale: "/collections/sale", "Ready-to-Ship": "/collections/ready-to-ship", "Engagement Rings": "/collections/engagement", "Wedding Rings": "/collections/wedding", Jewelry: "/collections/fine-jewelry", "Loose Stones": "/collections/loose-stones", Gifts: "/collections/gifts" };
+const nav = ["Sale", "Ready-to-Ship", "Engagement Rings", "Wedding Rings", "Jewelry", "Ring Styles", "Loose Stones", "Gifts"];
+const navHref: Record<string, string> = { Sale: "/collections/sale", "Ready-to-Ship": "/collections/ready-to-ship", "Engagement Rings": "/collections/engagement", "Wedding Rings": "/collections/wedding", Jewelry: "/collections/fine-jewelry", "Ring Styles": "/ring-styles", "Loose Stones": "/collections/loose-stones", Gifts: "/collections/gifts" };
 export type HeaderCollection = { id: string; name: string; slug: string };
 export type HeaderFeature = { slug: string; name: string; image: string; priceUsd: number };
 
