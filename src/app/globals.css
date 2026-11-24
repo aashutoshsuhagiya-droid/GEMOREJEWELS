@@ -15,15 +15,19 @@
   --cullen-border: #E7E3DA;
   --cullen-border-dark: #D6D1C6;
   --cullen-red: #D9383A;
-  /* Responsive breakpoints — single source of truth */
-  --bp-xs: 359px;
-  --bp-sm: 480px;
-  --bp-md: 600px;
-  --bp-lg: 767px;
-  --bp-xl: 900px;
-  --bp-2xl: 1023px;
-  --bp-3xl: 1180px;
-  --bp-4xl: 1280px;
+  /* Responsive breakpoints — use LITERAL pixels in @media. var() is invalid inside a
+     media query condition (the whole block silently never matches), so there are
+     deliberately no --bp-* custom properties. max-width uses the value, min-width
+     uses value + 1 so ranges never overlap:
+       token | max-width | min-width
+       xs    |  359px    |  360px
+       sm    |  480px    |  481px
+       md    |  600px    |  601px
+       lg    |  767px    |  768px
+       xl    |  900px    |  901px
+       2xl   | 1023px    | 1024px
+       3xl   | 1180px    | 1181px
+       4xl   | 1280px    | 1281px */
   /* Spacing scale */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
@@ -42,7 +46,6 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-  -webkit-overflow-scrolling: touch;
 }
 body {
   margin: 0;
@@ -51,9 +54,8 @@ body {
   font-family: var(--sans);
   font-weight: 400;
   font-kerning: normal;
-  font-size: clamp(13px, 1.2vw, 15px);
+  font-size: 15px;
   line-height: 1.6;
-  overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
 }
 *, *::before, *::after {
@@ -69,6 +71,23 @@ a {
 }
 button, input, select, textarea {
   font: inherit;
+}
+/* Storefront text-entry controls: 44px tall, and 16px below 1024px so iOS does not
+   zoom on focus. Buttons, checkboxes and radios get no global sizing. */
+:where(body:not(:has(.admin-root))) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="hidden"], [type="submit"], [type="button"], [type="file"]), select) {
+  min-height: 44px;
+}
+@media (max-width: 1023px) {
+  body:not(:has(.admin-root)) :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="hidden"], [type="submit"], [type="button"], [type="file"]), select, textarea) {
+    font-size: 16px;
+  }
+}
+/* The Tailwind admin keeps the element sizing it was built against (same specificity
+   as the original element rules, so admin utilities still win). */
+body:where(:has(.admin-root)) {
+  font-size: clamp(13px, 1.2vw, 15px);
+}
+:where(body:has(.admin-root)) :is(button, input, select, textarea) {
   font-size: clamp(15px, 1.1vw, 16px);
   min-height: 48px;
 }
@@ -85,12 +104,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   margin-inline: auto;
   padding-inline: 20px;
 }
-@media (min-width: var(--bp-lg)) {
+@media (min-width: 768px) {
   .shell {
     padding-inline: 40px;
   }
 }
-@media (min-width: var(--bp-4xl)) {
+@media (min-width: 1281px) {
   .shell {
     padding-inline: 56px;
   }
@@ -98,7 +117,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .section {
   padding-block: 64px;
 }
-@media (min-width: var(--bp-lg)) {
+@media (min-width: 768px) {
   .section {
     padding-block: 96px;
   }
@@ -113,8 +132,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* Cullen Editorial Typography */
 h1, h2, h3, .font-serif {
   font-family: var(--display);
-  font-weight: var(--heading-weight);
   letter-spacing: -0.025em;
+}
+h1, h2, .font-serif {
+  font-weight: var(--heading-weight);
   line-height: 1.12;
 }
 h1 {
@@ -338,7 +359,7 @@ h3 {
   scroll-snap-type: x mandatory;
   scroll-padding-inline: 16px;
 }
-@media (min-width: var(--bp-2xl)) {
+@media (min-width: 1024px) {
   .shape-grid {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
@@ -490,7 +511,7 @@ h3 {
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-@media (min-width: var(--bp-lg)) {
+@media (min-width: 768px) {
   .shape-showcase { gap: 28px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
 }
 /* Product Card & Smooth Image Crossfade */
@@ -683,7 +704,7 @@ summary::-webkit-details-marker {
   align-items: center;
 }
 
-@media (min-width: var(--bp-lg)) {
+@media (min-width: 768px) {
   .rs-step {
     grid-template-columns: 1fr 1fr;
     gap: 48px;
@@ -771,7 +792,7 @@ summary::-webkit-details-marker {
   gap: 28px;
 }
 
-@media (min-width: var(--bp-lg)) {
+@media (min-width: 768px) {
   .rs-tips {
     grid-template-columns: 1fr 1fr;
     gap: 48px;
@@ -904,7 +925,7 @@ summary::-webkit-details-marker {
   align-items: center;
 }
 
-@media (min-width: var(--bp-lg)) {
+@media (min-width: 768px) {
   .rs-cta {
     grid-template-columns: .8fr 1.2fr;
     gap: 48px;
@@ -1000,7 +1021,7 @@ summary::-webkit-details-marker {
 }
 
 /* Responsive */
-@media (max-width: var(--bp-lg)) {
+@media (max-width: 767px) {
   .rs-hero {
     min-height: clamp(420px, 80svh, 560px);
   }
@@ -1065,7 +1086,7 @@ summary::-webkit-details-marker {
   }
 }
 
-@media (max-width: var(--bp-sm)) {
+@media (max-width: 480px) {
   .rs-hero-inner {
     padding-block: 36px;
   }
@@ -1141,14 +1162,14 @@ summary::-webkit-details-marker {
   margin-top: 48px;
 }
 
-@media (max-width: var(--bp-2xl)) {
+@media (max-width: 1023px) {
   .rs-styles-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
   }
 }
 
-@media (max-width: var(--bp-md)) {
+@media (max-width: 600px) {
   .rs-styles-grid {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -1274,7 +1295,7 @@ summary::-webkit-details-marker {
   margin-top: 8px;
 }
 
-@media (max-width: var(--bp-lg)) {
+@media (max-width: 767px) {
   .rs-styles-hero {
     min-height: clamp(400px, 75svh, 520px);
   }
@@ -1306,7 +1327,7 @@ summary::-webkit-details-marker {
   }
 }
 
-@media (max-width: var(--bp-sm)) {
+@media (max-width: 480px) {
   .rs-styles-hero-inner {
     padding-block: 36px;
   }
@@ -1454,10 +1475,8 @@ summary::-webkit-details-marker {
 /* Policy page utilities */
 .breadcrumb {
   font-family: var(--sans);
-  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--cullen-muted);
   margin: 0;
 }
 .breadcrumb a {
@@ -1557,7 +1576,7 @@ summary::-webkit-details-marker {
   scroll-margin-top: 100px;
 }
 
-@media (max-width: var(--bp-sm)) {
+@media (max-width: 480px) {
   [id] {
     scroll-margin-top: 70px;
   }
@@ -1613,98 +1632,10 @@ summary::-webkit-details-marker {
   50% { transform: translateX(6px); }
 }
 
-/* ===== MOBILE BOTTOM NAVIGATION ===== */
-.mobile-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--cullen-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  z-index: 50;
-  padding-bottom: env(safe-area-inset-bottom);
-  transform: translateY(0);
-  transition: transform 0.3s ease;
-}
-.mobile-bottom-nav.hidden {
-  transform: translateY(100%);
-}
-.mobile-bottom-nav a,
-.mobile-bottom-nav button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  background: none;
-  border: 0;
-  color: var(--cullen-muted);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  padding: 6px 12px;
-  min-height: 44px;
-  min-width: 44px;
-  text-decoration: none;
-}
-.mobile-bottom-nav a.active,
-.mobile-bottom-nav button.active {
-  color: var(--cullen-forest);
-}
-.mobile-bottom-nav .nav-icon {
-  height: 22px;
-  width: 22px;
-}
-.mobile-bottom-nav .nav-cart-badge {
-  position: absolute;
-  top: 2px;
-  right: calc(50% - 18px);
-  background: var(--cullen-red);
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  height: 18px;
-  min-width: 18px;
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  padding: 0 5px;
-}
-@media (max-width: var(--bp-lg)) {
-  body {
-    padding-bottom: 60px;
-  }
-}
-
 /* ===== PERFORMANCE: CSS CONTAIN ===== */
-.product-card {
-  contain: layout style paint;
-}
 .cart-drawer,
 .mobile-menu {
   contain: layout style;
-}
-
-/* ===== PERFORMANCE: CONTENT VISIBILITY ===== */
-@media (max-width: var(--bp-2xl)) {
-  .section:nth-child(n+3) {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 500px;
-  }
-}
-
-/* ===== GPU ACCELERATION ===== */
-.button,
-.product-card,
-.style-card,
-.shape-card,
-.ssh-circle {
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 /* ===== REDUCED MOTION ===== */
@@ -1722,21 +1653,5 @@ summary::-webkit-details-marker {
   .metal-swatch:hover,
   .wish-button:hover {
     transform: none;
-  }
-}
-
-/* ===== MOBILE TOUCH TARGETS ===== */
-@media (max-width: var(--bp-sm)) {
-  a, button, [role="button"], input[type="submit"], input[type="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
-/* ===== MOBILE ANIMATION SPEED ===== */
-@media (max-width: var(--bp-sm)) {
-  *, *::before, *::after {
-    animation-duration: 0.6s !important;
-    transition-duration: 0.2s !important;
   }
 }
