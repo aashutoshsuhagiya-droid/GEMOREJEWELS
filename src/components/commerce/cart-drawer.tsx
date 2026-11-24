@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useDialogFocus } from "@/components/admin/use-dialog-focus";
 import { useCart } from "./cart-store";
 import { useCurrency } from "./currency-store";
 
@@ -10,6 +11,11 @@ export function CartDrawer() {
   const { items, isOpen, setOpen, updateQuantity, removeItem, subtotal } = useCart();
   const { formatMoney } = useCurrency();
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(40);
+  const drawerRef = useRef<HTMLElement>(null);
+
+  // Escape is handled at document level (focus may still be on the page behind the
+  // drawer), focus moves into the drawer and returns to the trigger on close.
+  useDialogFocus(drawerRef, () => setOpen(false), isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -26,13 +32,12 @@ export function CartDrawer() {
 
   return (
     <aside
+      ref={drawerRef}
       className={`cart-drawer ${isOpen ? "open" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="Shopping bag"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setOpen(false);
-      }}
+      aria-hidden={!isOpen}
     >
       <div className="cart-drag-handle" aria-hidden="true" />
       <div className="drawer-head">

@@ -37,7 +37,7 @@ export function CollectionClient({ products, initialFilter, initialShape, initia
       </select>
     </div>
     <div className="shell plp-layout">
-      <FilterSidebar active={active} onToggle={toggle} mobileOpen={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)}/>
+      <FilterSidebar active={active} onToggle={toggle} onClear={() => setActive([])} resultCount={filtered.length} mobileOpen={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)}/>
       <div>
         <button className="button button-outline button-small mobile-filters" onClick={() => setMobileFiltersOpen(true)}>Filters {active.length ? `(${active.length})` : ""}</button>
         {(active.length > 0 || shape) && <div className="active-filter-pills">

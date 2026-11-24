@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnnouncementBar } from "./announcement-bar";
 import { CartDrawer } from "@/components/commerce/cart-drawer";
 import { useCart } from "@/components/commerce/cart-store";
@@ -25,6 +25,10 @@ function SearchIcon() {
   return <svg className="header-search-icon" width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>;
 }
 
+function BagIcon() {
+  return <svg className="cart-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></svg>;
+}
+
 function HeaderPhone({ compact = false }: { compact?: boolean }) {
   return <a className={`header-phone${compact ? " header-phone-compact" : ""}`} href="tel:+918849760876" aria-label="Contact us at +91 884 976 0876"><ConciergeBellIcon/><span className="header-phone-label">Contact Us</span><span className="header-phone-number">+91 884 976 0876</span></a>;
 }
@@ -36,7 +40,10 @@ export function MegaMenu({ open, collections, featured }: { open: boolean; colle
 
 export function Header({ collections = [], featured }: { collections?: HeaderCollection[]; featured?: HeaderFeature }) {
   const [menu, setMenu] = useState(false); const [mega, setMega] = useState(false); const [scrolled, setScrolled] = useState(false); const { count, setOpen } = useCart();
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+  // Safari does not focus buttons on click, so return focus to the hamburger explicitly.
+  const closeMenu = () => { setMenu(false); hamburgerRef.current?.focus(); };
   useEffect(() => { const listen = () => setScrolled(window.scrollY > 8); listen(); window.addEventListener("scroll", listen); return () => window.removeEventListener("scroll", listen); }, []);
-  return <><AnnouncementBar/><header className={`site-header ${scrolled ? "scrolled" : ""}`} onMouseLeave={() => setMega(false)}><div className="shell header-inner"><div className="header-contact desktop-only"><HeaderPhone/><CurrencySelector/></div><div className="desktop-nav desktop-only">{nav.map(item => ["Engagement Rings", "Wedding Rings", "Jewelry"].includes(item) ? <Link className="nav-button" href={navHref[item]} onMouseEnter={() => setMega(true)} onFocus={() => setMega(true)} key={item}>{item}</Link> : <Link key={item} href={navHref[item]} onMouseEnter={() => setMega(false)} onFocus={() => setMega(false)}>{item}</Link>)}</div><div className="mobile-only header-mobile-left"><button className="hamburger" aria-label="Open menu" onClick={() => setMenu(true)}><span/><span/></button><HeaderPhone compact/></div><Logo/><div className="header-actions"><Link className="icon-link" href="/collections/engagement" aria-label="Search"><SearchIcon/></Link><Link className="icon-link account-link" href="/account">Account</Link><button className="cart-trigger" aria-label="Open shopping bag" onClick={() => setOpen(true)}>Bag <span className="cart-badge">{count}</span></button></div></div><MegaMenu open={mega} collections={collections} featured={featured}/></header><MobileMenu open={menu} collections={collections} onClose={() => setMenu(false)}/><CartDrawer /></>;
+  return <><AnnouncementBar/><header className={`site-header ${scrolled ? "scrolled" : ""}`} onMouseLeave={() => setMega(false)}><div className="shell header-inner"><div className="header-contact desktop-only"><HeaderPhone/><CurrencySelector/></div><div className="desktop-nav desktop-only">{nav.map(item => ["Engagement Rings", "Wedding Rings", "Jewelry"].includes(item) ? <Link className="nav-button" href={navHref[item]} onMouseEnter={() => setMega(true)} onFocus={() => setMega(true)} key={item}>{item}</Link> : <Link key={item} href={navHref[item]} onMouseEnter={() => setMega(false)} onFocus={() => setMega(false)}>{item}</Link>)}</div><div className="mobile-only header-mobile-left"><button ref={hamburgerRef} className="hamburger" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu(true)}><span/><span/></button><HeaderPhone compact/></div><Logo/><div className="header-actions"><Link className="icon-link" href="/collections/engagement" aria-label="Search"><SearchIcon/></Link><Link className="icon-link account-link" href="/account">Account</Link><button className="cart-trigger" aria-label="Open shopping bag" onClick={() => setOpen(true)}><BagIcon/><span className="cart-label">Bag</span> <span className="cart-badge">{count}</span></button></div></div><MegaMenu open={mega} collections={collections} featured={featured}/></header><MobileMenu open={menu} collections={collections} onClose={closeMenu}/><CartDrawer /></>;
 }
 
