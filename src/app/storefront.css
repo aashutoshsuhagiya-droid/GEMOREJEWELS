@@ -5050,435 +5050,302 @@ button.video-play-badge:hover {
 }
 
 /* ===================================================================
-   SPLIT-SCREEN SHAPE HERO — Compact Selector
-   LEFT: ring showcase | RIGHT: diamond shape grid with real PNG images
+   SPLIT-SCREEN SHAPE HERO — homepage "Shop by diamond shape"
+   LEFT: ring preview panel | RIGHT: 3 x 3 grid of shape links
+   (src/components/marketing/split-screen-shape-hero.tsx)
+
+   One contiguous block. The base rules are the 768px-and-up layout, so a
+   fractional viewport width that no min/max pair covers still gets a layout.
+   The hover rules, the phone overrides and the reduced-motion overrides follow
+   the base rules they override.
    =================================================================== */
 
+/* Literal white, not a token: the ring photos are opaque PNGs on white and only
+   disappear into a pure white panel. */
 .ssh-section {
-  background: #FFFFFF !important;
-  padding-block: 20px !important;
+  background: #FFFFFF;
+  padding-block: 48px;
 }
 
 .ssh-shell {
-  max-width: 900px;
   margin-inline: auto;
-  padding-inline: 12px;
+  max-width: 900px;
+  padding-inline: 20px;
 }
 
-/* ── Layout: side by side ── */
+/* Two equal halves of the same height. */
 .ssh-layout {
-  display: flex;
-  gap: 20px;
-  align-items: stretch;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-@media (max-width: 767px) {
-  .ssh-layout {
-    flex-direction: column;
-    gap: 16px;
-  }
-}
-
-/* ════════════════════════════════════════════
-   LEFT PANEL — Ring Showcase
-   ════════════════════════════════════════════ */
+/* ── LEFT: ring preview panel ──
+   Order at every width: eyebrow, heading, subtitle, ring photo, label. */
 .ssh-showcase {
-  flex: 0 0 42%;
-  display: flex;
   align-items: center;
-  justify-content: center;
   background: #FFFFFF;
+  border: 1px solid var(--cullen-border);
   border-radius: 2px;
-  border: 1px solid #F0EFED;
-}
-
-.ssh-showcase-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
   text-align: center;
-  padding: 20px 12px;
-  gap: 0;
-  width: 100%;
 }
 
-/* Eyebrow */
 .ssh-eyebrow {
   color: var(--cullen-gold);
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
+  letter-spacing: .3em;
+  line-height: 1.6;
   margin: 0 0 6px;
+  text-transform: uppercase;
 }
 
-/* Heading */
 .ssh-heading {
+  color: var(--cullen-charcoal);
   font-family: var(--display);
   font-size: clamp(1.3rem, 2.4vw, 1.8rem);
   font-weight: 350;
-  letter-spacing: -0.01em;
+  letter-spacing: -.01em;
   line-height: 1.15;
-  color: var(--cullen-charcoal);
   margin: 0 0 4px;
 }
 
-/* Subtitle */
 .ssh-subtitle {
+  color: var(--cullen-muted);
   font-family: var(--sans);
   font-size: 12px;
-  color: var(--cullen-muted);
-  margin: 0 0 12px;
-  max-width: 28ch;
   line-height: 1.5;
+  margin: 0 0 16px;
+  max-width: 28ch;
 }
 
-/* Image area */
-.ssh-image-stage {
+/* 4:3, the shape of the photos in public/images/shapes/. */
+.ssh-frame {
+  aspect-ratio: 4 / 3;
+  max-width: 260px;
+  position: relative;
   width: 100%;
-  max-width: 200px;
-  position: relative;
 }
 
-.ssh-image-frame {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  max-height: 200px;
-}
-
-.ssh-image-wrap {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ssh-ring-img {
-  width: 100% !important;
-  height: 100% !important;
+/* All nine photos are stacked in the frame for the life of the component. Inactive
+   ones are hidden with opacity only (never display: none), so the browser has fetched
+   them before their first hover. */
+.ssh-ring {
   object-fit: contain;
-  filter: drop-shadow(0 8px 20px rgba(28, 25, 23, 0.08));
+  opacity: 0;
+  transition: opacity .25s ease;
 }
 
-.ssh-ring-shadow {
-  position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50%;
-  height: 10px;
-  background: radial-gradient(ellipse, rgba(28, 25, 23, 0.06) 0%, transparent 70%);
-  border-radius: 50%;
+.ssh-ring--active {
+  opacity: 1;
+  z-index: 1;
 }
 
-/* Shape label */
+/* For a photo whose background is off-white (oval.png is #F9F9F9): a 4% lift turns
+   everything from 246 up into pure white, so no grey box shows on the panel. */
+.ssh-ring--lift {
+  filter: brightness(1.04);
+}
+
 .ssh-shape-label {
+  color: var(--cullen-charcoal);
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: .2em;
+  line-height: 1.6;
+  margin: 14px 0 0;
   text-transform: uppercase;
-  color: var(--cullen-charcoal);
-  margin: 10px 0 0;
 }
 
-/* ════════════════════════════════════════════
-   RIGHT PANEL — Diamond Shape Grid (with PNG images)
-   ════════════════════════════════════════════ */
+/* ── RIGHT: shape links ── */
 .ssh-picker {
-  flex: 1;
+  align-items: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 16px;
   justify-content: center;
-  gap: 14px;
 }
 
 .ssh-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 12px 8px;
-  width: 100%;
-  max-width: 280px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   list-style: none;
-  padding: 0;
   margin: 0;
+  max-width: 320px;
+  padding: 0;
+  width: 100%;
 }
 
-/* Grid item */
 .ssh-grid-item {
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+}
+
+/* The whole tile is the link. Its focus ring is the site-wide a:focus-visible outline
+   (globals.css), drawn around this box, so it encloses the circle and the name. */
+.ssh-tile {
   align-items: center;
-  gap: 5px;
-  padding: 6px 0;
   border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.ssh-grid-item--active {
-  background: #FFFFFF;
-  border-radius: 6px;
-  box-shadow: 0 1px 6px rgba(28, 25, 23, 0.04);
-}
-
-/* Shape button */
-.ssh-shape-btn {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  gap: 8px;
+  padding: 6px 4px;
 }
 
-/* Circle container */
 .ssh-circle {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
   background: #FFFFFF;
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05), 0 0 0 1px rgba(28, 25, 23, 0.03);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
-  overflow: visible;
-}
-
-.ssh-shape-btn:hover .ssh-circle {
-  transform: scale(1.05);
-  box-shadow: 0 3px 10px rgba(28, 25, 23, 0.08), 0 0 0 1px rgba(28, 25, 23, 0.04);
-}
-
-.ssh-circle--active {
-  box-shadow: 0 1px 4px rgba(28, 25, 23, 0.06);
-}
-
-/* Active ring */
-.ssh-active-ring {
-  position: absolute;
-  inset: -3px;
+  border: 1px solid var(--cullen-border);
   border-radius: 50%;
-  border: 2px solid var(--cullen-forest);
-  pointer-events: none;
+  display: grid;
+  height: 64px;
+  place-items: center;
+  transition: border-color .25s ease, box-shadow .25s ease, transform .3s cubic-bezier(.16, 1, .3, 1);
+  width: 64px;
 }
 
-/* Diamond PNG image inside circle */
-.ssh-diamond-img {
-  width: 36px !important;
-  height: 36px !important;
-  object-fit: contain;
-  position: relative;
-  z-index: 1;
+/* ShapeIcon sets no size or stroke of its own. The stroke is in viewBox units (32 wide),
+   so 1 at 38px draws the same 1.2px line as .shape-card svg on the collection pages. */
+.ssh-circle svg {
+  height: 38px;
+  stroke: var(--cullen-muted);
+  stroke-width: 1;
+  transition: stroke .25s ease;
+  width: 38px;
 }
 
-/* Shape name */
 .ssh-shape-name {
+  color: var(--cullen-muted);
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
+  line-height: 1.3;
   text-align: center;
   text-transform: uppercase;
-  color: var(--cullen-muted);
-  transition: color 0.3s ease;
-  line-height: 1.2;
+  transition: color .25s ease;
 }
 
-.ssh-grid-item--active .ssh-shape-name {
+/* The previewed shape: a 2px ring drawn by the circle's own border (a border, not a
+   shadow, so it survives forced-colours mode), a darker icon and a heavier name. */
+.ssh-tile--active .ssh-circle {
+  border-color: var(--cullen-forest);
+  border-width: 2px;
+}
+
+.ssh-tile--active .ssh-circle svg {
+  stroke: var(--cullen-charcoal);
+}
+
+.ssh-tile--active .ssh-shape-name {
   color: var(--cullen-charcoal);
   font-weight: 600;
 }
 
-.ssh-shape-btn:hover .ssh-shape-name {
-  color: var(--cullen-charcoal);
-}
-
-/* CTA link */
 .ssh-cta {
-  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  border-bottom: 1px solid var(--cullen-border-dark);
+  color: var(--cullen-charcoal);
+  display: inline-flex;
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  gap: 6px;
+  letter-spacing: .16em;
+  line-height: 1.6;
+  padding: 8px 0;
+  position: relative;
   text-transform: uppercase;
-  color: var(--cullen-charcoal);
-  text-decoration: none;
-  padding: 6px 0;
-  border-bottom: 1px solid #F0EFED;
-  transition: all 0.3s ease;
+  transition: border-color .3s ease, color .3s ease;
 }
 
-.ssh-cta:hover {
-  color: var(--cullen-forest);
-  border-color: var(--cullen-forest);
-  gap: 8px;
+/* Extends the link's hit area to 44px tall without moving the underline. */
+.ssh-cta::before {
+  content: "";
+  inset: -6px -12px;
+  position: absolute;
 }
 
 .ssh-cta svg {
-  transition: transform 0.3s ease;
+  transition: transform .3s ease;
 }
 
-.ssh-cta:hover svg {
-  transform: translateX(2px);
+/* The site-wide focus outline, moved out so it does not hug the letters. */
+.ssh-cta:focus-visible {
+  outline-offset: 6px;
 }
 
-/* ════════════════════════════════════════════
-   TABLET (768px – 1023px)
-   ════════════════════════════════════════════ */
-@media (min-width: 768px) and (max-width: 900px) {
-  .ssh-layout {
-    max-width: 640px;
-    margin-inline: auto;
+/* Pointer devices only, so a tapped tile does not stay in its hover state. */
+@media (hover: hover) {
+  .ssh-tile:hover .ssh-circle {
+    box-shadow: 0 8px 20px rgba(28, 25, 23, .08);
+    transform: translateY(-2px);
   }
 
-  .ssh-showcase-inner {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    text-align: center;
-    padding: 24px 16px;
+  .ssh-cta:hover {
+    border-color: var(--cullen-forest);
+    color: var(--cullen-forest);
   }
 
-  .ssh-showcase-inner > * {
-    flex: 0 0 100%;
-  }
-
-  .ssh-image-stage {
-    order: -1;
-    max-width: 220px;
-  }
-
-  .ssh-image-frame {
-    max-height: 220px;
-  }
-
-  .ssh-grid {
-    max-width: 360px;
-  }
-
-  .ssh-circle {
-    width: 60px;
-    height: 60px;
-  }
-
-  .ssh-diamond-img {
-    width: 36px !important;
-    height: 36px !important;
+  .ssh-cta:hover svg {
+    transform: translateX(3px);
   }
 }
 
-/* ════════════════════════════════════════════
-   MOBILE (< 768px)
-   ════════════════════════════════════════════ */
+/* 767px and down: the halves stack, panel first. */
 @media (max-width: 767px) {
   .ssh-section {
-    padding-block: 20px !important;
+    padding-block: 32px;
   }
 
   .ssh-layout {
-    gap: 16px;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .ssh-showcase {
-    flex: none;
+    padding: 24px 12px;
   }
 
-  .ssh-showcase-inner {
-    padding: 18px 12px;
-  }
-
-  .ssh-heading {
-    font-size: 1.3rem;
-  }
-
-  .ssh-subtitle {
-    font-size: 12px;
-    margin-bottom: 10px;
-  }
-
-  .ssh-image-stage {
-    max-width: 160px;
-  }
-
-  .ssh-image-frame {
-    max-height: 160px;
+  .ssh-frame {
+    max-width: 220px;
   }
 
   .ssh-grid {
-    max-width: 250px;
-    gap: 10px 6px;
+    gap: 8px 6px;
+    max-width: 260px;
   }
 
   .ssh-circle {
-    width: 50px;
-    height: 50px;
+    height: 52px;
+    width: 52px;
   }
 
-  .ssh-diamond-img {
-    width: 30px !important;
-    height: 30px !important;
-  }
-
-  .ssh-shape-name {
-    letter-spacing: 0.06em;
-  }
-
-  .ssh-cta {
-    display: none;
+  .ssh-circle svg {
+    height: 32px;
+    stroke-width: 1.2;
+    width: 32px;
   }
 }
 
-@media (max-width: 480px) {
-  .ssh-grid {
-    max-width: 230px;
-    gap: 8px 5px;
-  }
-
-  .ssh-circle {
-    width: 46px;
-    height: 46px;
-  }
-
-  .ssh-diamond-img {
-    width: 28px !important;
-    height: 28px !important;
-  }
-}
-
-/* ════════════════════════════════════════════
-   ACCESSIBILITY — Reduced motion
-   ════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
+  .ssh-ring,
+  .ssh-tile,
   .ssh-circle,
+  .ssh-circle svg,
   .ssh-shape-name,
   .ssh-cta,
   .ssh-cta svg {
-    transition: none !important;
+    transition: none;
   }
 
-  .ssh-shape-btn:hover .ssh-circle {
+  .ssh-tile:hover .ssh-circle,
+  .ssh-cta:hover svg {
     transform: none;
   }
-}
-
-/* ── Keyboard focus ring for shape buttons ── */
-.ssh-shape-btn:focus-visible {
-  outline: 2px solid var(--cullen-gold);
-  outline-offset: 6px;
-  border-radius: 50%;
-}
-
-.ssh-shape-btn:focus-visible .ssh-circle {
-  box-shadow:
-    0 8px 24px rgba(28, 25, 23, 0.1),
-    0 0 0 4px rgba(197, 168, 128, 0.2);
 }
