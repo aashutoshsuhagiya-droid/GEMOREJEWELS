@@ -365,6 +365,14 @@ test("homepage shape picker never loads the mislabelled artwork folders", () => 
   for (const folder of ["/images/diamonds/", "/images/ring-styles/"]) assert.ok(!shapePicker.includes(folder), `the homepage shape picker must not reference ${folder}: that folder holds mislabelled artwork`);
 });
 
+test("metal swatches cannot be stretched by a global button min-height", () => {
+  // globals.css keeps min-height: 48px on every admin <button>, and the admin editor's Card preview renders the real ProductCard.
+  const rules = [...storefrontCss.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const swatchRules = rules.filter(([, selectors]) => selectors.split(",").some(selector => /\.metal-swatch\s*$/.test(selector)));
+  assert.ok(swatchRules.length > 0, "storefront.css styles .metal-swatch");
+  assert.ok(swatchRules.some(([, , body]) => body.split(";").some(declaration => /^\s*min-height:\s*0(px)?\s*$/.test(declaration))), "a .metal-swatch rule must declare min-height: 0, or an element-level button min-height stretches the round swatch into a pill");
+});
+
 test("demo seed fulfils the catalogue and operational data contract", () => {
   const designsSource = repository.match(/const designs = \[(.*?)\];/s)?.[1] ?? "";
   const designCount = [...designsSource.matchAll(/"[^"]+"/g)].length;

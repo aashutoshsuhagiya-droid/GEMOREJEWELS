@@ -406,6 +406,10 @@ button:disabled {
 }
 
 .metal-swatch {
+  /* Not redundant: an element-level button min-height (the admin keeps 48px in
+     globals.css, and its Card preview renders this swatch) outranks `height`
+     and stretches the round swatch into a pill. */
+  min-height: 0;
   padding: 0;
   flex: 0 0 14px;
 }
