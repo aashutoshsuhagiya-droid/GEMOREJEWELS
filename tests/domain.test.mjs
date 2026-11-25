@@ -360,6 +360,11 @@ test("collection subcategory strips match the client's list and only point at th
   }
 });
 
+test("homepage shape picker never loads the mislabelled artwork folders", () => {
+  const shapePicker = read("src/components/marketing/split-screen-shape-hero.tsx");
+  for (const folder of ["/images/diamonds/", "/images/ring-styles/"]) assert.ok(!shapePicker.includes(folder), `the homepage shape picker must not reference ${folder}: that folder holds mislabelled artwork`);
+});
+
 test("demo seed fulfils the catalogue and operational data contract", () => {
   const designsSource = repository.match(/const designs = \[(.*?)\];/s)?.[1] ?? "";
   const designCount = [...designsSource.matchAll(/"[^"]+"/g)].length;
