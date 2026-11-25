@@ -2,7 +2,7 @@
 
 import { diamondShapes, type DiamondShape } from "@/lib/product-options";
 
-function ShapeIcon({ shape }: { shape: DiamondShape }) {
+export function ShapeIcon({ shape }: { shape: DiamondShape }) {
   const outlines: Partial<Record<DiamondShape, string>> = {
     Emerald: "M11 3h10l5 5v16l-5 5H11l-5-5V8Z M12 7h8l2 3v12l-2 3h-8l-2-3V10Z M6 8l4 2m16-2-4 2M6 24l4-2m16 2-4-2",
     Pear: "M16 3C13 9 5 15 5 21a11 9 0 0 0 22 0C27 15 19 9 16 3Z M16 8 10 21l6 5 6-5Z",
