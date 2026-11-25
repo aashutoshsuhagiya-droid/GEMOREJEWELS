@@ -393,7 +393,8 @@ button:disabled {
 
 .card-rating {
   display: block;
-  margin-top: 12px;
+  flex: none;
+  white-space: nowrap;
 }
 
 .wish-button {
@@ -3321,13 +3322,23 @@ button.video-play-badge:hover {
   opacity: 1;
 }
 
+/* The card's text block is a wrapping flex row so the rating can share a line:
+   beside the name on the desktop card, beside the price on the compact card
+   (the 900px block below). Flex items' margins do not collapse, so the gaps
+   between the lines are the price's and the swatches' top margins alone. */
 .product-info {
+  align-items: baseline;
+  column-gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
   padding: 12px 1px 3px;
 }
 
 .product-info h3 {
+  flex: 1 1 0;
   font-size: 21px;
-  margin: 0 0 4px;
+  margin: 0;
+  min-width: 0;
 }
 
 .product-spec,
@@ -3342,12 +3353,23 @@ button.video-play-badge:hover {
 .price-pair {
   color: var(--cullen-charcoal);
   display: grid;
-  margin: 8px 0 5px;
+  flex: 1 1 100%;
+  margin: 8px 0 0;
 }
 
 .card-rating {
   color: var(--cullen-gold);
   font-size: 12px;
+}
+
+/* 13px stars in a 12px line: at the body's line height their box would be taller
+   than the price's line and push the swatches down. */
+.card-rating .stars {
+  line-height: 1;
+}
+
+.product-info .metal-swatches {
+  flex: 0 0 100%;
 }
 
 /* Mobile + tablet product card styles */
@@ -3362,11 +3384,26 @@ button.video-play-badge:hover {
     padding: 10px 12px 12px;
   }
   .product-info h3 {
+    flex-basis: 100%;
     font-size: 14px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  /* The name takes the first line. The price and a one-star rating share the next;
+     a rating that does not fit beside a long price drops onto its own line. */
+  .price-pair {
+    flex: 1 1 auto;
+  }
+  .card-rating {
+    order: 1;
+  }
+  .card-rating .stars-extra {
+    display: none;
+  }
+  .product-info .metal-swatches {
+    order: 2;
   }
 }
 
