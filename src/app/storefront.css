@@ -499,6 +499,180 @@ button:disabled {
   padding-top: 24px;
 }
 
+/* ===== COLLECTION SUBCATEGORY STRIP =====
+   Image-and-name tiles under the collection page header, driven by
+   src/data/collection-subcategories.ts. Base rules first, then media queries from
+   wide to narrow, each after the base rule it overrides. */
+.subcat {
+  padding-top: 24px;
+}
+
+.subcat-heading {
+  color: var(--cullen-muted);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  line-height: 1.4;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* The base layout is the 1024px-and-up row: no scrolling, ten equal columns capped at
+   120px, so a group of one, two or four tiles is the same size as the ten shape tiles
+   and stays left. It is the base rule (not a min-width query) so that a fractional
+   viewport width such as 1023.2px, which no pair of min/max queries covers, still gets
+   a layout. The block padding is room for the hover lift, the shadow and the focus
+   ring: the row below scrolls sideways, and that clips vertically as well. */
+.subcat-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(10, minmax(0, 120px));
+  list-style: none;
+  margin: 0;
+  padding: 12px 0;
+}
+
+.subcat-item {
+  min-width: 0;
+}
+
+/* minmax(0, 1fr) pins the column to the tile, so a long word wraps instead of
+   stretching the frame. */
+.subcat-tile {
+  border-radius: 4px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.subcat-frame {
+  aspect-ratio: 1 / 1;
+  background-color: var(--cullen-white);
+  border: 1px solid var(--cullen-border);
+  border-radius: 4px;
+  display: block;
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+  transition: border-color .3s ease, box-shadow .3s ease, transform .3s cubic-bezier(.16, 1, .3, 1);
+}
+
+.subcat-frame--cover .subcat-image {
+  object-fit: cover;
+}
+
+/* Ring cut-outs sit on opaque white. Multiply lets the frame colour show through, so
+   the current tile's tint is not broken by a white box. */
+.subcat-frame--contain .subcat-image {
+  mix-blend-mode: multiply;
+  object-fit: contain;
+  padding: 8%;
+}
+
+.subcat-frame--empty {
+  background-color: var(--cullen-oatmeal);
+  display: grid;
+  place-items: center;
+}
+
+.subcat-placeholder {
+  fill: none;
+  height: 36%;
+  stroke: var(--cullen-border-dark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.2;
+  width: 36%;
+}
+
+.subcat-name {
+  color: var(--cullen-charcoal);
+  display: block;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.subcat-tile:focus-visible .subcat-frame {
+  border-color: var(--cullen-forest);
+}
+
+.subcat-tile[aria-current="true"] .subcat-frame {
+  background-color: var(--cullen-gold-light);
+  border-color: var(--cullen-forest);
+}
+
+.subcat-tile[aria-current="true"] .subcat-name {
+  font-weight: 600;
+}
+
+/* Same hover as .shape-card. Pointer devices only, so a tapped tile does not stay lifted. */
+@media (hover: hover) {
+  .subcat-tile:hover .subcat-frame {
+    border-color: var(--cullen-forest);
+    box-shadow: 0 8px 24px rgba(28, 25, 23, .08);
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subcat-tile:hover .subcat-frame {
+    transform: none;
+  }
+}
+
+/* 1023px and down: one swipe row. It bleeds past the .shell padding to both screen
+   edges; the first tile rests on the page padding and a part-visible tile on the right
+   shows there is more. Phone values first (.shell padding 20px, about three and a half
+   tiles across: 80px at 320, 91px at 375, 100px from 406). */
+@media (max-width: 1023px) {
+  .subcat-list {
+    display: flex;
+    margin-inline: -20px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-inline: 20px;
+    scroll-padding-inline: 20px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .subcat-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .subcat-item {
+    flex: 0 0 clamp(80px, calc((100vw - 56px) / 3.5), 100px);
+    scroll-snap-align: start;
+  }
+
+  /* Keyboard focus: Chrome does not scroll a focused tile into view once 32px of it is
+     showing, which leaves the focus ring cut off at the screen edge. While a tile has
+     keyboard focus it is the row's only snap target, so the row snaps to it. */
+  .subcat-list:has(.subcat-tile:focus-visible) .subcat-item:not(:has(.subcat-tile:focus-visible)) {
+    scroll-snap-align: none;
+  }
+}
+
+/* 768px to 1023px: the same row with the tablet .shell padding (40px) and 96px tiles. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .subcat-list {
+    margin-inline: -40px;
+    padding-inline: 40px;
+    scroll-padding-inline: 40px;
+  }
+
+  .subcat-item {
+    flex-basis: 96px;
+  }
+}
+
 .collection-toolbar {
   display: flex;
   flex-wrap: wrap;
