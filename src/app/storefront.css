@@ -5316,6 +5316,13 @@ button.video-play-badge:hover {
     max-width: 220px;
   }
 
+  /* Tighter tracking so the longest label (Round's, 273px wide at .2em) stays on one
+     line in the 254px panel of a 320px screen. A label that wrapped would change the
+     panel height and move the grid. */
+  .ssh-shape-label {
+    letter-spacing: .12em;
+  }
+
   .ssh-grid {
     gap: 8px 6px;
     max-width: 260px;
