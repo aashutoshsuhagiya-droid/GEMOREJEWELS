@@ -362,7 +362,7 @@ h3 {
 @media (min-width: 1024px) {
   .shape-grid {
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
+    grid-template-columns: repeat(10, 1fr);
     overflow: visible;
   }
 }

@@ -2,9 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import Database from "better-sqlite3";
 import { diamondShapes, metalOptions, parseMetal, parseShape, productHref, productPrice } from "../src/lib/product-options.ts";
+import { collectionSubcategories } from "../src/data/collection-subcategories.ts";
 import { sqliteDatabasePath } from "../src/lib/sqlite-storage.ts";
 import { DEFAULT_CURRENCY, STATIC_USD_RATES, STATIC_RATES_UPDATED_AT, currencyAmount, currencyOptions, currencySymbol, formatCurrencyAmount, isCurrencyCode } from "../src/lib/currency.ts";
 import { inferJewelryType, isJewelryType, migrateProductJewelryTypes } from "../src/lib/jewelry-type.ts";
@@ -315,12 +316,48 @@ test("metal and diamond price changes preserve the USD configurator quote", () =
   assert.equal(product.usdPrice, 2269);
 });
 
-test("shape links accept all nine silhouettes and safely normalize URL filters", () => {
-  assert.equal(new Set(diamondShapes).size, 9);
+test("shape links accept all ten silhouettes and safely normalize URL filters", () => {
+  assert.equal(new Set(diamondShapes).size, 10);
   for (const shape of diamondShapes) assert.equal(parseShape(shape.toLowerCase()), shape);
   assert.equal(parseShape(["Oval", "Pear"]), "Oval");
   assert.equal(parseShape(undefined), undefined);
   assert.equal(parseShape("<script>"), undefined);
+});
+
+test("collection subcategory strips match the client's list and only point at things that exist", () => {
+  const expected = {
+    engagement: ["Shop by Diamond Shape", ["Round", "Oval", "Pear", "Marquise", "Heart", "Cushion", "Radiant", "Asscher", "Princess", "Emerald"]],
+    wedding: ["Shop by Style", ["Eternity Rings", "Half Eternity Rings", "Open Cuff Bands", "Curved Bands"]],
+    earrings: ["Shop by Style", ["Stud", "Dangle", "Hoop", "Bridal"]],
+    necklaces: ["Shop by Style", ["Tennis Necklace"]],
+    bracelets: ["Shop by Style", ["Tennis Bracelet", "Solitaire Chain Bracelet"]],
+  };
+  assert.deepEqual(Object.keys(collectionSubcategories).sort(), Object.keys(expected).sort(), "strips exist for exactly these five collections (no pendants)");
+  for (const [slug, [heading, names]] of Object.entries(expected)) {
+    const group = collectionSubcategories[slug];
+    assert.equal(group.heading, heading);
+    assert.ok(["contain", "cover"].includes(group.imageFit), `${slug} imageFit`);
+    assert.deepEqual(group.items.map(item => item.name), names, `${slug} tiles, in the client's order`);
+    for (const item of group.items) {
+      const label = `${slug} / ${item.name}`;
+      if (item.href !== undefined) {
+        assert.ok(item.href.startsWith("/collections/"), `${label}: links are stored as site paths`);
+        const link = new URL(item.href, "http://localhost:3000");
+        const shapes = link.searchParams.getAll("shape");
+        if (link.pathname === `/collections/${slug}`) assert.deepEqual([...new Set(link.searchParams.keys())].filter(key => key !== "shape"), [], `${label}: a link back to its own page can only filter by shape`);
+        for (const shape of shapes) assert.equal(parseShape(shape), shape, `${label}: ?shape=${shape} must be a shape the collection page can filter by`);
+      }
+      if (item.image === undefined) continue;
+      if (item.image.startsWith("/")) {
+        const file = join(root, "public", item.image);
+        // readdirSync, because existsSync ignores letter case on Windows and macOS but the server may not
+        assert.ok(existsSync(file) && readdirSync(dirname(file)).includes(basename(file)), `${label}: ${item.image} is missing from public/ (check the exact spelling and case)`);
+        assert.ok(!["/images/diamonds/", "/images/ring-styles/"].some(folder => item.image.startsWith(folder)), `${label}: those folders hold mislabelled artwork`);
+      } else {
+        assert.ok(item.image.startsWith("https://"), `${label}: an image is a /public path or an https URL`);
+      }
+    }
+  }
 });
 
 test("demo seed fulfils the catalogue and operational data contract", () => {

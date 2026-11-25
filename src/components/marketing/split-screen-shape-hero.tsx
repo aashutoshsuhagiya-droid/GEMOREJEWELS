@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ringImages, type DiamondShape } from "@/lib/product-options";
+import { ringImages, type ShapeWithArtwork } from "@/lib/product-options";
 
 /* ─── Inline SVG outline for unselected shapes ─── */
-function DiamondOutline({ shape, size = 30 }: { shape: DiamondShape; size?: number }) {
+function DiamondOutline({ shape, size = 30 }: { shape: ShapeWithArtwork; size?: number }) {
   const c = "#9A9A9A";
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -24,7 +24,7 @@ function DiamondOutline({ shape, size = 30 }: { shape: DiamondShape; size?: numb
   );
 }
 
-const SHAPES: DiamondShape[] = [
+const SHAPES: ShapeWithArtwork[] = [
   "Round", "Oval", "Emerald",
   "Pear", "Cushion", "Marquise",
   "Radiant", "Princess", "Asscher",
@@ -38,7 +38,7 @@ const imgSwap = {
 
 /* ════════════════════════════════════════════════════ */
 export function SplitScreenShapeHero() {
-  const [active, setActive] = useState<DiamondShape>("Pear");
+  const [active, setActive] = useState<ShapeWithArtwork>("Pear");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);

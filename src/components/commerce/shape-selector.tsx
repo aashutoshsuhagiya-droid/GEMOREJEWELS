@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { useState } from "react";
-import { diamondImages, diamondShapes, ringImages, type DiamondShape } from "@/lib/product-options";
+import { diamondShapes, type DiamondShape } from "@/lib/product-options";
 
 function ShapeIcon({ shape }: { shape: DiamondShape }) {
   const outlines: Partial<Record<DiamondShape, string>> = {
@@ -14,38 +11,15 @@ function ShapeIcon({ shape }: { shape: DiamondShape }) {
     Radiant: "M10 3h12l5 5v16l-5 5H10l-5-5V8Z M10 3l6 8 6-8M5 8l11 3 11-3M5 24l11-3 11 3M10 29l6-8 6 8M16 11l-7 5 7 5 7-5Z",
     Princess: "M4 4h24v24H4Z M4 4l12 7L28 4l-7 12 7 12-12-7-12 7 7-12Z M16 11l5 5-5 5-5-5Z",
     Asscher: "M11 3h10l8 8v10l-8 8H11l-8-8V11Z M12 8h8l4 4v8l-4 4h-8l-4-4v-8Z M3 11l5 1m13-9-1 5m9 13-5-1M11 29l1-5",
+    Heart: "M16 28.5C9.5 23 3 18 3 11a6.5 6.5 0 0 1 13 0 6.5 6.5 0 0 1 13 0c0 7-6.5 12-13 17.5Z M16 15l-6-2 6 9.5 6-9.5Z M16 11v4m-6-2-6.5 1.5M22 13l6.5 1.5M16 22.5v6",
   };
   return <svg viewBox="0 0 32 32" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
     {shape === "Round" ? <><circle cx="16" cy="16" r="13"/><path d="m16 3 9 4 4 9-4 9-9 4-9-4-4-9 4-9Z M16 8l8 8-8 8-8-8Z M16 3v5m13 8h-5m-8 13v-5M3 16h5"/></> : shape === "Oval" ? <><ellipse cx="16" cy="16" rx="10" ry="14"/><path d="m16 6 6 10-6 10-6-10Z M16 2v4m10 10h-4m-6 14v-4M6 16h4"/></> : <path d={outlines[shape]}/>}
   </svg>;
 }
 
-export function ShapeSelector({ selected, onSelect }: { selected?: DiamondShape; onSelect?: (shape: DiamondShape) => void }) {
-  if (!onSelect) return <ShapeShowcase/>;
-
+export function ShapeSelector({ selected, onSelect }: { selected?: DiamondShape; onSelect: (shape: DiamondShape) => void }) {
   return <div className="shape-grid" role="group" aria-label="Shop by diamond shape">
     {diamondShapes.map(shape => <button type="button" className={`shape-card${selected === shape ? " active" : ""}`} aria-pressed={selected === shape} onClick={() => onSelect(shape)} key={shape}><ShapeIcon shape={shape}/><span>{shape}</span></button>)}
-  </div>;
-}
-
-function ShapeShowcase() {
-  const [activeShape, setActiveShape] = useState<DiamondShape>("Round");
-
-  return <div className="shape-showcase" onMouseLeave={() => setActiveShape("Round")} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActiveShape("Round"); }}>
-    <div className="shape-stage">
-      <div className="shape-stage-heading">
-        <p className="eyebrow">Find your silhouette</p>
-        <h2>Shop by diamond shape</h2>
-        <p className="shape-stage-lede">Discover the shape that feels like you.</p>
-      </div>
-      <div className="shape-stage-preview" aria-hidden="true">{diamondShapes.map(shape => <Image key={shape} src={ringImages[shape]} alt="" fill sizes="(max-width: 767px) 80vw, 340px" loading="eager" className={`shape-stage-diamond${activeShape === shape ? " is-active" : ""}`}/>)}</div>
-      <p className="shape-stage-caption" aria-live="polite" aria-atomic="true">{activeShape} cut · {activeShape === "Round" ? "the classic brilliant" : "on your ring"}</p>
-    </div>
-    <div className="shape-picker">
-      <div className="shape-grid" role="navigation" aria-label="Shop by diamond shape">{diamondShapes.map(shape => <Link className="shape-card" href={`/collections/engagement?shape=${shape}`} key={shape} data-preview={activeShape === shape} onMouseEnter={() => setActiveShape(shape)} onFocus={() => setActiveShape(shape)}>
-        <span className="shape-thumbnail-wrap"><Image className="shape-thumbnail" src={diamondImages[shape]} alt={`${shape} cut diamond engagement ring`} width={100} height={100} sizes="(max-width: 767px) 45vw, 96px"/>{activeShape === shape ? <span className="shape-check" aria-hidden="true">✓</span> : null}</span>
-        <span className="shape-card-name">{shape}</span>
-      </Link>)}</div>
-    </div>
   </div>;
 }
