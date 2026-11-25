@@ -30,7 +30,6 @@ export function ProductCard({ product }: { product: Product }) {
     </div>
     <div className="product-info">
       <h3><Link href={href}>{product.name}</Link></h3>
-      <p className="product-spec" aria-live="polite">{product.carat} {product.setting}, {metal}</p>
       <div className="price-pair"><span>{formatMoney(price)}</span></div>
       <MetalSwatches value={metal} onChange={setMetal} label={`Choose metal for ${product.name}`}/>
       <span className="card-rating"><span className="stars" aria-hidden="true">★★★★★</span> <span className="text-cullen-muted">{product.rating} ({product.reviewCount})</span></span>
