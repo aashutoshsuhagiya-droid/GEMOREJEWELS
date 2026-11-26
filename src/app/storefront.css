@@ -3341,19 +3341,16 @@ button.video-play-badge:hover {
   min-width: 0;
 }
 
-.product-spec,
-.price-pair {
-  font-size: 12px;
-}
-
 .product-spec {
   color: var(--cullen-muted);
+  font-size: 12px;
 }
 
 .price-pair {
   color: var(--cullen-charcoal);
   display: grid;
   flex: 1 1 100%;
+  font-size: 15px;
   margin: 8px 0 0;
 }
 
@@ -3395,6 +3392,7 @@ button.video-play-badge:hover {
      a rating that does not fit beside a long price drops onto its own line. */
   .price-pair {
     flex: 1 1 auto;
+    font-size: 14px;
   }
   .card-rating {
     order: 1;
