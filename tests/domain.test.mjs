@@ -6,6 +6,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import Database from "better-sqlite3";
 import { diamondShapes, metalOptions, parseMetal, parseShape, productHref, productPrice } from "../src/lib/product-options.ts";
 import { collectionSubcategories } from "../src/data/collection-subcategories.ts";
+import { PRODUCTS_PER_PAGE, clampPage, pageCount, paginationItems, parsePage } from "../src/lib/pagination.ts";
 import { sqliteDatabasePath } from "../src/lib/sqlite-storage.ts";
 import { DEFAULT_CURRENCY, STATIC_USD_RATES, STATIC_RATES_UPDATED_AT, currencyAmount, currencyOptions, currencySymbol, formatCurrencyAmount, isCurrencyCode } from "../src/lib/currency.ts";
 import { inferJewelryType, isJewelryType, migrateProductJewelryTypes } from "../src/lib/jewelry-type.ts";
@@ -535,4 +536,40 @@ test("authentication uses a protected httpOnly session cookie", () => {
   assert.match(authRoute, /httpOnly:\s*true/);
   assert.match(middleware, /\/admin/);
   assert.match(middleware, /login/);
+});
+
+test("collection pagination reads the page parameter, counts pages and lists at most five slots", () => {
+  assert.equal(PRODUCTS_PER_PAGE % 6, 0, "a full page must end on a full row in the 3-column and the 2-column grid");
+  for (const [value, page] of [["1", 1], ["2", 2], ["37", 37], [undefined, 1], [null, 1], ["", 1], ["0", 1], ["-2", 1], ["2.5", 1], ["02", 1], ["2abc", 1], ["abc", 1], [" 2", 1], ["1e3", 1], ["9999999999", 1]]) {
+    assert.equal(parsePage(value), page, `parsePage(${JSON.stringify(value)})`);
+  }
+  for (const [total, pages] of [[0, 1], [1, 1], [12, 1], [13, 2], [24, 2], [25, 3], [45, 4]]) assert.equal(pageCount(total, 12), pages, `pageCount(${total}, 12)`);
+  for (const [requested, count, shown] of [[1, 4, 1], [3, 4, 3], [99, 4, 4], [0, 4, 1], [2, 1, 1], [2, 0, 1]]) assert.equal(clampPage(requested, count), shown, `clampPage(${requested}, ${count})`);
+
+  const rows = {
+    "1/1": [1], "1/4": [1, 2, 3, 4], "3/5": [1, 2, 3, 4, 5],
+    "1/6": [1, 2, 3, "gap", 6], "3/6": [1, 2, 3, "gap", 6], "4/6": [1, "gap", 4, 5, 6],
+    "4/7": [1, "gap", 4, "gap", 7], "5/7": [1, "gap", 5, 6, 7],
+    "64/128": [1, "gap", 64, "gap", 128], "128/128": [1, "gap", 126, 127, 128],
+  };
+  for (const [key, expected] of Object.entries(rows)) {
+    const [current, count] = key.split("/").map(Number);
+    assert.deepEqual(paginationItems(current, count), expected, `paginationItems(${key})`);
+  }
+  for (let count = 1; count <= 40; count++) {
+    for (let current = 1; current <= count; current++) {
+      const label = `page ${current} of ${count}`;
+      const items = paginationItems(current, count);
+      const numbers = items.filter(item => item !== "gap");
+      assert.equal(items.length, Math.min(count, 5), `${label}: the row keeps its width from page to page`);
+      assert.ok(numbers.includes(current), `${label}: the current page is listed`);
+      assert.equal(numbers[0], 1, `${label}: the first page is listed`);
+      assert.equal(numbers.at(-1), count, `${label}: the last page is listed`);
+      items.forEach((item, index) => {
+        if (item !== "gap") return;
+        assert.ok(items[index + 1] - items[index - 1] >= 3, `${label}: a gap stands for at least two pages`);
+      });
+      numbers.forEach((number, index) => { if (index > 0) assert.ok(number > numbers[index - 1], `${label}: pages ascend without repeats`); });
+    }
+  }
 });

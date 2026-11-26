@@ -3086,6 +3086,7 @@ button.video-play-badge:hover {
   display: grid;
   gap: 34px;
   grid-template-columns: 220px minmax(0, 1fr);
+  padding-bottom: 56px;
   padding-top: 40px;
 }
 
@@ -3278,30 +3279,26 @@ button.video-play-badge:hover {
   padding: 7px 11px;
 }
 
-.product-grid,
-.skeletons {
+.product-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @media (max-width: 1180px) {
-  .product-grid,
-  .skeletons {
+  .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 480px) {
-  .product-grid,
-  .skeletons {
+  .product-grid {
     gap: 12px;
   }
 }
 
 @media (max-width: 359px) {
-  .product-grid,
-  .skeletons {
+  .product-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -3412,27 +3409,100 @@ button.video-play-badge:hover {
   }
 }
 
-.load-more {
+/* ===== COLLECTION PAGINATION =====
+   Page links under the product grid (src/components/commerce/pagination.tsx): two
+   arrows and at most five numbered slots, so seven boxes at most. Base rules first,
+   then the phone block after the rules it overrides. */
+.pagination {
+  margin-top: 40px;
+}
+
+.pagination-list {
   display: flex;
+  gap: 6px;
   justify-content: center;
-  padding: 38px 0 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.skeletons {
-  margin-top: 16px;
+/* Each slot may shrink: seven 44px boxes do not fit a 320px phone. */
+.pagination-list > li {
+  flex: 0 1 40px;
+  min-width: 0;
 }
 
-.skeleton {
-  animation: shimmer 1.5s infinite;
-  aspect-ratio: 1;
-  background: linear-gradient(90deg, var(--cullen-oatmeal), #fff, var(--cullen-oatmeal));
-  background-size: 200% 100%;
+.pagination-link,
+.pagination-gap {
+  align-items: center;
+  display: flex;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  height: 40px;
+  justify-content: center;
+  line-height: 1;
 }
 
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
+.pagination-link {
+  background-color: var(--cullen-white);
+  border: 1px solid var(--cullen-border);
+  border-radius: 4px;
+  color: var(--cullen-charcoal);
+  font-weight: 500;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.pagination-link[aria-current="page"] {
+  background-color: var(--cullen-forest);
+  border-color: var(--cullen-forest);
+  color: var(--cullen-white);
+}
+
+.pagination-link.is-disabled {
+  color: var(--cullen-border-dark);
+}
+
+.pagination-gap {
+  color: var(--cullen-muted);
+}
+
+.pagination-arrow svg {
+  fill: none;
+  height: 14px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  width: 14px;
+}
+
+/* Pointer devices only, so a tapped link does not stay tinted. */
+@media (hover: hover) {
+  a.pagination-link:hover {
+    background-color: var(--cullen-gold-light);
+    border-color: var(--cullen-forest);
   }
+}
+
+@media (max-width: 767px) {
+  .pagination-list {
+    gap: 4px;
+  }
+
+  .pagination-list > li {
+    flex-basis: 44px;
+  }
+
+  .pagination-link,
+  .pagination-gap {
+    height: 44px;
+  }
+}
+
+/* The grid takes focus after a page change so that Tab continues from the first
+   piece. It is not a control, so it shows no focus ring. */
+.product-grid:focus-visible {
+  outline: none;
 }
 
 /* ===== PRODUCT DETAIL PAGE ===== */
